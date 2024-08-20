@@ -1,0 +1,13 @@
+services:
+  database:
+    container_name: gen-database
+    build: .
+    ports:
+      - 54320:5432
+    restart: always
+    volumes:
+      - ./data:/var/lib/postgresql/data
+      - ./dumps:/dumps
+    environment:
+      - POSTGRES_PASSWORD=genpass
+      - POSTGRES_USER=genuser

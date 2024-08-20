@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+NOW=$(date +'%Y-%m-%d_%s');
+
+PGPASSWORD=$POSTGRES_PASSWORD pg_dump \
+    -h localhost \
+    -U $POSTGRES_USER \
+    -d postgres \
+    --format=c \
+    --encoding=UTF-8 \
+    --no-tablespaces \
+    --verbose \
+    $DATABASE > /dumps/dump_${NOW};
