@@ -16,6 +16,8 @@ sqlalchemy = "^2.0.32"
 [tool.poetry.group.dev.dependencies]
 blue = "^0.9.1"
 isort = "^5.13.2"
+pytest = "^8.3.2"
+pytest-cov = "^5.0.0"
 taskipy = "^1.13.0"
 
 [build-system]
@@ -27,3 +29,4 @@ downgrade = "alembic downgrade base"
 lint = "isort . && blue . --extend-exclude data"
 migrate = "alembic upgrade head"
 restore = "./restore_last_dump.sh"
+test = "pytest -x -v --ff --cov=gen --cov-report=html tests/"

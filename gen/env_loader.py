@@ -3,8 +3,8 @@ from os import environ, getcwd, path
 from dotenv import load_dotenv
 
 
-def load():
-    env = path.join(getcwd(), '.env')
+def load(filename: str = '.env'):
+    env = path.join(getcwd(), filename)
     if not path.exists(env):
         raise Exception('Error! .env does not exsit.')
     load_dotenv(dotenv_path=env)
