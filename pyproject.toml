@@ -23,6 +23,7 @@ build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
 [tool.taskipy.tasks]
+downgrade = "alembic downgrade base"
 lint = "isort . && blue . --extend-exclude data"
 migrate = "alembic upgrade head"
 restore = "./restore_last_dump.sh"
