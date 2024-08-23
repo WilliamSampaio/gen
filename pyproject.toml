@@ -33,8 +33,9 @@ GEN_SQLALCHEMY_DATABASE_URI = "sqlite:///database.test.sqlite3"
 GEN_USERNAME = "user"
 
 [tool.taskipy.tasks]
-downgrade = "alembic downgrade base"
+db_migrate = "alembic upgrade head"
+db_rollback = "alembic downgrade base"
+db_rollback_one = "alembic downgrade -1"
 lint = "isort . && blue . --extend-exclude data"
-migrate = "alembic upgrade head"
 restore = "./restore_last_dump.sh"
 test = "pytest -x -v --cov=gen --cov-report=html tests/"

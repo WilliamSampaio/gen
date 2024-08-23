@@ -1,4 +1,4 @@
-"""create tree table
+"""tree table
 
 Revision ID: 6c969c1cb484
 Revises:
@@ -8,7 +8,7 @@ from typing import Sequence, Union
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.sql import expression, func
+from sqlalchemy.sql import func
 
 # revision identifiers, used by Alembic.
 revision: str = '6c969c1cb484'
@@ -24,21 +24,9 @@ def upgrade() -> None:
         sa.Column('name', sa.String(100), nullable=False),
         sa.Column('born_in', sa.Date()),
         sa.Column('died_in', sa.Date()),
-        sa.Column('gender', sa.CHAR()),
+        sa.Column('gender', sa.CHAR(), nullable=False),
         sa.Column('father_id', sa.String(8), sa.ForeignKey('tree.id')),
         sa.Column('mother_id', sa.String(8), sa.ForeignKey('tree.id')),
-        sa.Column(
-            'relevant',
-            sa.Boolean,
-            server_default=expression.false(),
-            nullable=False,
-        ),
-        sa.Column(
-            'explored_tree',
-            sa.Boolean,
-            server_default=expression.false(),
-            nullable=False,
-        ),
         sa.Column(
             'inserted_in',
             sa.DateTime(),

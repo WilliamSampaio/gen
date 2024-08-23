@@ -1,7 +1,6 @@
-from sqlalchemy import (CHAR, Boolean, Column, Date, DateTime, ForeignKey,
-                        String)
+from sqlalchemy import CHAR, Column, Date, DateTime, ForeignKey, String
 from sqlalchemy.orm import declarative_base
-from sqlalchemy.sql import expression, func
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
@@ -16,16 +15,6 @@ class TreeNode(Base):
     gender = Column(CHAR())
     father_id = Column(String(8), ForeignKey('tree.id'))
     mother_id = Column(String(8), ForeignKey('tree.id'))
-    relevant = Column(
-        Boolean,
-        server_default=expression.false(),
-        nullable=False,
-    )
-    explored_tree = Column(
-        Boolean,
-        server_default=expression.false(),
-        nullable=False,
-    )
     inserted_in = Column(
         DateTime(),
         nullable=False,
