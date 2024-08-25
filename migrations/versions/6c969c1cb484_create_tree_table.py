@@ -21,10 +21,10 @@ def upgrade() -> None:
     op.create_table(
         'tree',
         sa.Column('id', sa.String(8), primary_key=True),
-        sa.Column('name', sa.String(100), nullable=False),
+        sa.Column('name', sa.String(100)),
         sa.Column('born_in', sa.Date()),
         sa.Column('died_in', sa.Date()),
-        sa.Column('gender', sa.CHAR(), nullable=False),
+        sa.Column('gender', sa.CHAR()),
         sa.Column('father_id', sa.String(8), sa.ForeignKey('tree.id')),
         sa.Column('mother_id', sa.String(8), sa.ForeignKey('tree.id')),
         sa.Column(
