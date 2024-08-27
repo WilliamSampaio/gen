@@ -1,8 +1,11 @@
 from flask import Flask
+from flask_cors import CORS
 
-from gen.server.blueprints import web
+from gen.server.blueprints import api, web
 
 app = Flask(__name__)
+
+CORS(app)
 
 
 @app.route('/online')
@@ -11,3 +14,4 @@ def hello_world():
 
 
 web.init_app(app)
+api.init_app(app)

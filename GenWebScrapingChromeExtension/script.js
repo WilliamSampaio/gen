@@ -1,8 +1,9 @@
 
+const serverApiUrl = document.getElementById('serverApiUrl');
 const btnRunScan = document.getElementById('btnRunScan');
 
 
-const scan = () => {
+const scan = (serverApiUrl) => {
     const getXPathNode = (xpath, ctxNode = null) => {
         return document.evaluate(
             xpath,
@@ -127,7 +128,30 @@ const scan = () => {
         nodes.push(node);
     })
 
-    console.log(nodes);
+    // console.log(nodes);
+
+    // POST request options
+    const requestOptions = {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(nodes)
+    };
+
+    // Make the POST request
+    fetch(serverApiUrl + '/node', requestOptions)
+        .then(response => {
+            if (response.status != 201) {
+                alert('Failed to save data.')
+            } else {
+                alert('Data saved successfully!')
+            }
+        })
+        .catch(error => {
+            // Handle any errors that occurred during the fetch
+            console.error('There was a problem with the fetch operation:', error);
+        });
 };
 
 if (chrome.storage) {
@@ -150,6 +174,7 @@ btnRunScan.addEventListener('click', async function () {
     });
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        function: scan
+        function: scan,
+        args: [serverApiUrl.value]
     });
 });
