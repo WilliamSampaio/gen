@@ -3,30 +3,14 @@
     "name": "WebScrapingChromeExtension",
     "description": "Web scraping Chrome extension",
     "version": "0.1.0",
-    "background": {
-        "service_worker": "background.js"
-    },
     "homepage_url": "https://github.com/WilliamSampaio/gen",
     "action": {
-        "default_popup": "popup/index.html",
-        "default_icon": "images/icon.png"
+        "default_icon": "icon.png",
+        "default_popup": "index.html"
     },
     "permissions": [
         "activeTab",
         "scripting",
         "storage"
-    ],
-    "content_scripts": [
-        {
-            "matches": [
-                "https://*.familysearch.org/*"
-            ],
-            "js": [
-                "contentscript.js"
-            ]
-        }
-    ],
-    "host_permissions": [
-        "https://*.familysearch.org/*"
     ]
 }
