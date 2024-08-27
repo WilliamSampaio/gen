@@ -3,6 +3,7 @@ from datetime import date
 from flask import Blueprint, request
 
 from gen.database import add_root, add_tree_node
+from gen.database import get_roots as groots
 from gen.database.entities import TreeNode
 
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -34,6 +35,13 @@ def add_nodes():
         if node['is_root'] is True:
             add_root(node['id'])
     return {}, 201
+
+
+@api.route('/roots')
+def get_roots():
+    data = groots()
+    print(data)
+    return data, 200
 
 
 def init_app(app):

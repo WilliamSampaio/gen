@@ -1,9 +1,9 @@
 from os import environ
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from gen.database.entities import TreeNode
+from gen.database.entities import Root, TreeNode
 
 engine = create_engine(environ['GEN_SQLALCHEMY_DATABASE_URI'], echo=False)
 
@@ -50,3 +50,17 @@ def add_root(tree_id: str):
         print(e)
         return False
     return True
+
+
+def get_roots():
+    sql = """
+    select t.id
+    from tree t
+    where
+        t.id in (select rn.tree_id from root_nodes rn)
+        or t.id in (
+            select t2.id
+            from tree t2
+            where t2.mother_id is null and t2.father_id is null
+        )"""
+    return [x[0] for x in Session().execute(text(sql)).all()]
