@@ -2,7 +2,7 @@ from datetime import date
 
 from flask import Blueprint, request
 
-from gen.database import add_tree_node
+from gen.database import add_root, add_tree_node
 from gen.database.entities import TreeNode
 
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -31,6 +31,8 @@ def add_nodes():
         if years[1] is not None:
             tree_node.died_in = date(year=years[1], month=1, day=1)
         add_tree_node(tree_node)
+        if node['is_root'] is True:
+            add_root(node['id'])
     return {}, 201
 
 

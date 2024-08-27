@@ -1,4 +1,5 @@
-from sqlalchemy import CHAR, Column, Date, DateTime, ForeignKey, String
+from sqlalchemy import (CHAR, Column, Date, DateTime, ForeignKey, Integer,
+                        String)
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
@@ -26,3 +27,15 @@ class TreeNode(Base):
             self.id,
             self.name
         )
+
+
+class Root(Base):
+    __tablename__ = 'root_nodes'
+
+    id = Column(Integer, primary_key=True)
+    tree_id = Column(
+        String(8),
+        ForeignKey('tree.id'),
+        unique=True,
+        nullable=False
+    )

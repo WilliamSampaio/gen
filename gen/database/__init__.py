@@ -38,3 +38,15 @@ def remove_tree_node(id: str):
         print(e)
         return False
     return True
+
+
+def add_root(tree_id: str):
+    try:
+        root = Root()
+        root.tree_id = tree_id
+        with Session.begin() as session:
+            session.add(root)
+    except Exception as e:
+        print(e)
+        return False
+    return True
