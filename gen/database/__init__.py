@@ -80,7 +80,7 @@ def add_maternal_filiation(mother_id: str, son_id: str):
 
 def get_roots():
     sql = """
-    select t.id from tree t
+    select distinct t.id from tree t
     where
         t.id in (select rn.tree_id from root_nodes rn) or
         t.id not in (select fo.son_id from father_of fo) and
@@ -91,7 +91,7 @@ def get_roots():
 
 def get_leaves():
     sql = """
-    select t.id from tree t
+    select distinct t.id from tree t
     where
         t.id not in (select fo.father_id from father_of fo) and
         t.id not in (select mo.mother_id from mother_of mo)

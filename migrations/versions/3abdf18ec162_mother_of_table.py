@@ -38,6 +38,9 @@ def upgrade() -> None:
             server_default=func.now(),
         ),
     )
+    op.create_unique_constraint(
+        'mother_of_uniq', 'mother_of', ['mother_id', 'son_id']
+    )
 
 
 def downgrade() -> None:

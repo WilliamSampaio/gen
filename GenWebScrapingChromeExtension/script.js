@@ -2,8 +2,30 @@
 const btnRunScan = document.getElementById('btnRunScan');
 const btnScanLeaves = document.getElementById('btnScanLeaves');
 
+function sleep(time) {
+    return new Promise(resolve => setTimeout(resolve, time));
+}
 
-const scan = (serverApiUrl) => {
+const setUpStorage = () => {
+    if (chrome.storage) {
+        chrome.storage.local.get('__gen_extension', function (items) {
+            if (Object.keys(items).length === 0) {
+                chrome.storage.local.set({
+                    __gen_extension: {
+                        leaves: [],
+                        settings: {}
+                    }
+                }).catch(error => {
+                    throw new error;
+                })
+            }
+        });
+    } else {
+        throw new Error("chrome.storage API is not available.");
+    }
+}
+
+const scan = (serverApiUrl, scanningLeaves = false) => {
     const getXPathNode = (xpath, ctxNode = null) => {
         return document.evaluate(
             xpath,
@@ -72,7 +94,7 @@ const scan = (serverApiUrl) => {
 
     // rootNode.mother_id = mother_id !== null ? mother_id.textContent : null;
 
-    rootNode.is_root = window.confirm(`Press OK if "${rootNode.name}" is a root node.`);
+    rootNode.is_root = scanningLeaves ? false : window.confirm(`Press OK if "${rootNode.name}" is a root node.`);
 
     nodes.push(rootNode);
 
@@ -139,30 +161,22 @@ const scan = (serverApiUrl) => {
     fetch(serverApiUrl + '/node', requestOptions)
         .then(response => {
             if (response.status != 201) {
-                alert('Failed to save data.')
+                if (!scanningLeaves) {
+                    alert('Failed to save data.')
+                }
             } else {
-                alert('Data saved successfully!')
+                if (!scanningLeaves) {
+                    alert('Data saved successfully!')
+                }
             }
         })
         .catch(error => {
             // Handle any errors that occurred during the fetch
-            alert('There was a problem with the fetch operation: ' + error.message);
+            if (!scanningLeaves) {
+                alert('There was a problem with the fetch operation: ' + error.message);
+            }
         });
 };
-
-if (chrome.storage) {
-    // console.log(chrome.storage.local.get('gen_settings', (res) => {
-    //     if(res.gen_settings === undefined){
-
-    //     }
-    // }));
-} else {
-    console.error("chrome.storage API is not available.");
-    document.getElementById('msg').innerHTML = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
-        chrome.storage API is not available.
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>`;
-}
 
 btnRunScan.addEventListener('click', async function () {
     const [tab] = await chrome.tabs.query({
@@ -176,13 +190,61 @@ btnRunScan.addEventListener('click', async function () {
 });
 
 btnScanLeaves.addEventListener('click', async function () {
-    const [tab] = await chrome.tabs.query({
-        active: true, currentWindow: true
-    });
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: scan,
-        args: [document.getElementById('serverApiUrl').value]
+
+    if (!window.confirm(`Press OK to continue...`)) {
+        return;
+    }
+
+    fetch(document.getElementById('serverApiUrl').value + '/leaves')
+        .then(response => {
+            if (response.status != 200) {
+                throw new Error(`Something went wrong (Status: ${response.status})`);
+            }
+            return response.json();
+        })
+        .then(json => {
+            if (chrome.storage) {
+                chrome.storage.local.get('__gen_extension', function (items) {
+                    if (Object.keys(items).length === 0) {
+                        throw new Error('Storage not seted!')
+                    }
+                    items.__gen_extension.leaves.push(...json);
+                    chrome.storage.local.set(items)
+                        .then(() => {
+                            console.log('Items stored!');
+                        })
+                        .catch(error => {
+                            throw new error;
+                        })
+                });
+            } else {
+                alert("chrome.storage API is not available.");
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error.message)
+        })
+
+    chrome.storage.local.get('__gen_extension', async function (items) {
+        while (items.__gen_extension.leaves.length > 0) {
+            const [tab] = await chrome.tabs.query({
+                active: true, currentWindow: true
+            });
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                function: id => { window.location.href = 'https://www.familysearch.org/tree/person/details/' + id },
+                args: [items.__gen_extension.leaves.shift()]
+            });
+            console.log('Loading page...');
+            await sleep(5000);
+            await chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                function: scan,
+                args: [document.getElementById('serverApiUrl').value, true]
+            });
+        };
+        chrome.storage.local.set(items);
+        alert('Finish!');
     });
 });
 
@@ -213,5 +275,6 @@ const checkFunc = () => {
         });
 }
 
+setUpStorage()
 checkFunc()
 let check = setInterval(checkFunc, 3000);
