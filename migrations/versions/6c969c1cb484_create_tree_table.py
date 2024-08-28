@@ -25,8 +25,16 @@ def upgrade() -> None:
         sa.Column('born_in', sa.Date()),
         sa.Column('died_in', sa.Date()),
         sa.Column('gender', sa.CHAR()),
-        sa.Column('father_id', sa.String(8), sa.ForeignKey('tree.id')),
-        sa.Column('mother_id', sa.String(8), sa.ForeignKey('tree.id')),
+        sa.Column(
+            'father_id',
+            sa.String(8),
+            sa.ForeignKey('tree.id', ondelete='CASCADE'),
+        ),
+        sa.Column(
+            'mother_id',
+            sa.String(8),
+            sa.ForeignKey('tree.id', ondelete='CASCADE'),
+        ),
         sa.Column(
             'inserted_in',
             sa.DateTime(),
