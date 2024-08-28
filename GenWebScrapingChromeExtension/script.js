@@ -1,4 +1,3 @@
-
 const btnRunScan = document.getElementById('btnRunScan');
 const btnScanLeaves = document.getElementById('btnScanLeaves');
 
@@ -25,7 +24,13 @@ const setUpStorage = () => {
     }
 }
 
-const scan = (serverApiUrl, scanningLeaves = false) => {
+function scan(serverApiUrl, scanningLeaves = false) {
+    const XP_ID = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button';
+    const XP_GENDER = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span';
+    const XP_NAME = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[1]/div/div/div[1]/span';
+    const XP_M_CHILDREN_ROOT = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]';
+    const XP_F_CHILDREN_ROOT = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]';
+
     const getXPathNode = (xpath, ctxNode = null) => {
         return document.evaluate(
             xpath,
@@ -37,42 +42,52 @@ const scan = (serverApiUrl, scanningLeaves = false) => {
     }
 
     // set true: Show All Family Members
-    if (getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/div').getAttribute("aria-checked") == 'false') {
-        getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/input').click();
+    try {
+        if (getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/div').getAttribute("aria-checked") == 'false') {
+            getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/input').click();
+        }
+    } catch {
+        console.log('set true: Show All Family Members FAIL!');
     }
 
     const nodes = [];
     const rootNode = {};
 
-    let id = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button');
-
-    if (id !== null) {
-        rootNode.id = id.textContent;
-    }
-
-    let name = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[1]/div/div/div/h3/button/div/div/div/div/div/div/div[3]/span/span');
-
-    if (name !== null) {
-        rootNode.name = name.textContent;
-    }
-
-    let gender = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span');
+    let gender = getXPathNode(XP_GENDER);
 
     if (gender !== null) {
         rootNode.gender = gender.textContent[0];
     }
 
-    let years = null;
+    let id = getXPathNode(XP_ID);
 
-    if (rootNode.gender == 'F') {
-        years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
-    } else {
-        years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[1]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
+    if (id !== null) {
+        rootNode.id = id.textContent;
     }
+
+    let name = getXPathNode(XP_NAME);
+
+    if (name !== null) {
+        rootNode.name = name.textContent;
+    }
+
+    let years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
 
     if (years !== null) {
         rootNode.years = years.textContent;
     }
+
+    // let years = null;
+
+    // if (rootNode.gender == 'F') {
+    //     years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
+    // } else {
+    //     years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[1]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
+    // }
+
+    // if (years !== null) {
+    //     rootNode.years = years.textContent;
+    // }
 
     // let father_id = null;
 
@@ -98,19 +113,13 @@ const scan = (serverApiUrl, scanningLeaves = false) => {
 
     nodes.push(rootNode);
 
-    let childrenRoot = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]');
+    let childrenRoot = getXPathNode(rootNode.gender == 'F' ? XP_F_CHILDREN_ROOT : XP_M_CHILDREN_ROOT);
 
     if (childrenRoot !== null) {
 
         if (childrenRoot.childNodes !== null) {
 
             childrenRoot.childNodes.forEach(spouses => {
-
-                let years = getXPathNode('div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', spouses);
-
-                if (years !== null) {
-                    rootNode.years = years.textContent;
-                }
 
                 let children = getXPathNode('div/div/div[2]/div[2]/div/div/div/ul', spouses);
 
