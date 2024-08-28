@@ -42,13 +42,13 @@ function scan(serverApiUrl, scanningLeaves = false) {
     }
 
     // set true: Show All Family Members
-    try {
-        if (getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/div').getAttribute("aria-checked") == 'false') {
-            getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/input').click();
-        }
-    } catch {
-        console.log('set true: Show All Family Members FAIL!');
-    }
+    // try {
+    //     if (getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/div').getAttribute("aria-checked") == 'false') {
+    //         getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/input').click();
+    //     }
+    // } catch {
+    //     console.log('set true: Show All Family Members FAIL!');
+    // }
 
     const nodes = [];
     const rootNode = {};
@@ -264,7 +264,7 @@ btnScanLeaves.addEventListener('click', async function () {
                 args: [items.__gen_extension.leaves.shift()]
             });
             console.log('Loading page...');
-            await sleep(5000);
+            await sleep(10000);
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: scan,
