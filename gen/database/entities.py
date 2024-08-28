@@ -1,5 +1,5 @@
-from sqlalchemy import (CHAR, Column, Date, DateTime, ForeignKey, Integer,
-                        String)
+from sqlalchemy import (CHAR, Boolean, Column, Date, DateTime, ForeignKey,
+                        Integer, String, false)
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.sql import func
 
@@ -14,6 +14,7 @@ class TreeNode(Base):
     born_in = Column(Date())
     died_in = Column(Date())
     gender = Column(CHAR())
+    leaf = Column(Boolean(), nullable=False, server_default=false())
     inserted_in = Column(
         DateTime(),
         nullable=False,
