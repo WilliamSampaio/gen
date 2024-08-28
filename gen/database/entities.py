@@ -14,8 +14,6 @@ class TreeNode(Base):
     born_in = Column(Date())
     died_in = Column(Date())
     gender = Column(CHAR())
-    father_id = Column(String(8), ForeignKey('tree.id'))
-    mother_id = Column(String(8), ForeignKey('tree.id'))
     inserted_in = Column(
         DateTime(),
         nullable=False,
@@ -34,6 +32,42 @@ class Root(Base):
 
     id = Column(Integer, primary_key=True)
     tree_id = Column(
+        String(8),
+        ForeignKey('tree.id'),
+        unique=True,
+        nullable=False
+    )
+
+
+class FatherOf(Base):
+    __tablename__ = 'father_of'
+
+    id = Column(Integer, primary_key=True)
+    father_id = Column(
+        String(8),
+        ForeignKey('tree.id'),
+        unique=True,
+        nullable=False
+    )
+    son_id = Column(
+        String(8),
+        ForeignKey('tree.id'),
+        unique=True,
+        nullable=False
+    )
+
+
+class MotherOf(Base):
+    __tablename__ = 'mother_of'
+
+    id = Column(Integer, primary_key=True)
+    mother_id = Column(
+        String(8),
+        ForeignKey('tree.id'),
+        unique=True,
+        nullable=False
+    )
+    son_id = Column(
         String(8),
         ForeignKey('tree.id'),
         unique=True,

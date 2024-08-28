@@ -89,10 +89,8 @@ const scan = (serverApiUrl) => {
 
         if (rootNode.gender == 'M') {
             node.father_id = rootNode.id;
-            node.mother_id = null;
         } else {
             node.mother_id = rootNode.id;
-            node.father_id = null;
         }
 
         let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', item);

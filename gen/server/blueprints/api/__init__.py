@@ -2,8 +2,13 @@ from datetime import date
 
 from flask import Blueprint, request
 
-from gen.database import add_root, add_tree_node
-from gen.database import get_roots as groots
+from gen import database as db
+from gen.database import (
+    add_maternal_filiation,
+    add_paternal_filiation,
+    add_root,
+    add_tree_node,
+)
 from gen.database.entities import TreeNode
 
 api = Blueprint('api', __name__, url_prefix='/api')
@@ -22,10 +27,6 @@ def add_nodes():
         tree_node.id = node['id']
         tree_node.name = node['name']
         tree_node.gender = node['gender']
-        if 'father_id' in node:
-            tree_node.father_id = node['father_id']
-        if 'mother_id' in node:
-            tree_node.mother_id = node['mother_id']
         years = treats_years(node['years'])
         if years[0] is not None:
             tree_node.born_in = date(year=years[0], month=1, day=1)
@@ -34,13 +35,22 @@ def add_nodes():
         add_tree_node(tree_node)
         if node['is_root'] is True:
             add_root(node['id'])
+        if 'father_id' in node:
+            add_paternal_filiation(node['father_id'], node['id'])
+        if 'mother_id' in node:
+            add_maternal_filiation(node['mother_id'], node['id'])
     return {}, 201
 
 
 @api.route('/roots')
 def get_roots():
-    data = groots()
-    print(data)
+    data = db.get_roots()
+    return data, 200
+
+
+@api.route('/leaves')
+def get_leaves():
+    data = db.get_leaves()
     return data, 200
 
 

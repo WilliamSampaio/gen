@@ -3,7 +3,7 @@ from os import environ
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from gen.database.entities import Root, TreeNode
+from gen.database.entities import FatherOf, MotherOf, Root, TreeNode
 
 engine = create_engine(environ['GEN_SQLALCHEMY_DATABASE_URI'], echo=False)
 
@@ -52,15 +52,48 @@ def add_root(tree_id: str):
     return True
 
 
+def add_paternal_filiation(father_id: str, son_id: str):
+    try:
+        filiation = FatherOf()
+        filiation.father_id = father_id
+        filiation.son_id = son_id
+        with Session.begin() as session:
+            session.add(filiation)
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
+
+def add_maternal_filiation(mother_id: str, son_id: str):
+    try:
+        filiation = MotherOf()
+        filiation.mother_id = mother_id
+        filiation.son_id = son_id
+        with Session.begin() as session:
+            session.add(filiation)
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
+
 def get_roots():
     sql = """
-    select t.id
-    from tree t
+    select t.id from tree t
     where
-        t.id in (select rn.tree_id from root_nodes rn)
-        or t.id in (
-            select t2.id
-            from tree t2
-            where t2.mother_id is null and t2.father_id is null
-        )"""
+        t.id in (select rn.tree_id from root_nodes rn) or
+        t.id not in (select fo.son_id from father_of fo) and
+        t.id not in (select mo.son_id from mother_of mo)
+    """
+    return [x[0] for x in Session().execute(text(sql)).all()]
+
+
+def get_leaves():
+    sql = """
+    select t.id from tree t
+    where
+        t.id not in (select fo.father_id from father_of fo) and
+        t.id not in (select mo.mother_id from mother_of mo)
+    """
     return [x[0] for x in Session().execute(text(sql)).all()]
