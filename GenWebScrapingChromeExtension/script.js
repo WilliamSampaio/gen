@@ -31,8 +31,15 @@ function scan(serverApiUrl, scanningLeaves = false) {
         '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span'
     ];
     const XP_NAME = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[1]/div/div/div[1]/span';
-    const XP_M_CHILDREN_ROOT = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]';
-    const XP_F_CHILDREN_ROOT = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]';
+    const XP_CHILDREN_ROOT = [
+        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]',
+        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]'
+    ];
+    const XP_YEARS = [
+        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span',
+        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span',
+        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[1]/div/div/ul/div[1]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span'
+    ];
 
     const getXPathNode = (xpath, ctxNode = null) => {
         return document.evaluate(
@@ -79,11 +86,11 @@ function scan(serverApiUrl, scanningLeaves = false) {
         rootNode.name = name.textContent;
     }
 
-    let years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
+    // let years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
 
-    if (years !== null) {
-        rootNode.years = years.textContent;
-    }
+    // if (years !== null) {
+    //     rootNode.years = years.textContent;
+    // }
 
     // let years = null;
 
@@ -121,116 +128,127 @@ function scan(serverApiUrl, scanningLeaves = false) {
 
     nodes.push(rootNode);
 
-    let childrenRoot = getXPathNode(rootNode.gender == 'F' ? XP_F_CHILDREN_ROOT : XP_M_CHILDREN_ROOT);
+    XP_YEARS.forEach(xp => {
 
-    if (childrenRoot !== null) {
+        let years = getXPathNode(xp);
 
-        if (childrenRoot.childNodes !== null) {
-
-            childrenRoot.childNodes.forEach(spouses => {
-
-                let children = getXPathNode('div/div/div[2]/div[2]/div/div/div/ul', spouses);
-
-                if (children.childNodes !== null) {
-
-                    children.childNodes.forEach(child => {
-                        let node = {};
-
-                        if (rootNode.gender == 'M') {
-                            node.father_id = rootNode.id;
-                        } else {
-                            node.mother_id = rootNode.id;
-                        }
-
-                        let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
-
-                        if (id !== null) {
-                            node.id = id.textContent;
-                        }
-
-                        let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
-
-                        if (name !== null) {
-                            node.name = name.textContent;
-                        }
-
-                        let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
-
-                        if (years !== null) {
-                            node.years = years.textContent;
-                        }
-
-                        let gender = getXPathNode('div/div/div[1]/div', child);
-
-                        if (gender !== null) {
-                            if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
-                                node.gender = 'F';
-                            } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
-                                node.gender = 'M';
-                            }
-                        }
-
-                        node.is_root = false;
-
-                        nodes.push(node);
-                    })
-                }
-            });
+        if (years === null) {
+            return;
         }
-    } else {
-
-        let years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
 
         if (years !== null) {
             rootNode.years = years.textContent;
         }
+    });
 
-        let children = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[2]/div[2]/div/div/div/ul');
+    let children = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[2]/div[2]/div/div/div/ul');
 
-        if (children.childNodes !== null) {
+    if (children !== null && children.childNodes !== null) {
 
-            children.childNodes.forEach(child => {
-                let node = {};
+        children.childNodes.forEach(child => {
+            let node = {};
 
-                if (rootNode.gender == 'M') {
-                    node.father_id = rootNode.id;
-                } else {
-                    node.mother_id = rootNode.id;
+            if (rootNode.gender == 'M') {
+                node.father_id = rootNode.id;
+            } else {
+                node.mother_id = rootNode.id;
+            }
+
+            let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
+
+            if (id !== null) {
+                node.id = id.textContent;
+            }
+
+            let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
+
+            if (name !== null) {
+                node.name = name.textContent;
+            }
+
+            let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
+
+            if (years !== null) {
+                node.years = years.textContent;
+            }
+
+            let gender = getXPathNode('div/div/div[1]/div', child);
+
+            if (gender !== null) {
+                if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
+                    node.gender = 'F';
+                } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
+                    node.gender = 'M';
                 }
+            }
 
-                let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
+            node.is_root = false;
 
-                if (id !== null) {
-                    node.id = id.textContent;
-                }
+            nodes.push(node);
+        })
+    } else {
 
-                let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
+        XP_CHILDREN_ROOT.forEach(xp => {
 
-                if (name !== null) {
-                    node.name = name.textContent;
-                }
+            let childrenRoot = getXPathNode(xp);
 
-                let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
+            if (childrenRoot === null) {
+                return;
+            }
 
-                if (years !== null) {
-                    node.years = years.textContent;
-                }
+            if (childrenRoot.childNodes !== null) {
 
-                let gender = getXPathNode('div/div/div[1]/div', child);
+                childrenRoot.childNodes.forEach(spouses => {
 
-                if (gender !== null) {
-                    if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
-                        node.gender = 'F';
-                    } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
-                        node.gender = 'M';
+                    let children = getXPathNode('div/div/div[2]/div[2]/div/div/div/ul', spouses);
+
+                    if (children.childNodes !== null) {
+
+                        children.childNodes.forEach(child => {
+                            let node = {};
+
+                            if (rootNode.gender == 'M') {
+                                node.father_id = rootNode.id;
+                            } else {
+                                node.mother_id = rootNode.id;
+                            }
+
+                            let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
+
+                            if (id !== null) {
+                                node.id = id.textContent;
+                            }
+
+                            let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
+
+                            if (name !== null) {
+                                node.name = name.textContent;
+                            }
+
+                            let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
+
+                            if (years !== null) {
+                                node.years = years.textContent;
+                            }
+
+                            let gender = getXPathNode('div/div/div[1]/div', child);
+
+                            if (gender !== null) {
+                                if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
+                                    node.gender = 'F';
+                                } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
+                                    node.gender = 'M';
+                                }
+                            }
+
+                            node.is_root = false;
+
+                            nodes.push(node);
+                        })
                     }
-                }
-
-                node.is_root = false;
-
-                nodes.push(node);
-            })
-        }
+                });
+            }
+        })
     }
 
     // console.log(nodes);
