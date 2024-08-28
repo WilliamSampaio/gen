@@ -1,6 +1,6 @@
 
-const serverApiUrl = document.getElementById('serverApiUrl');
 const btnRunScan = document.getElementById('btnRunScan');
+const btnScanLeaves = document.getElementById('btnScanLeaves');
 
 
 const scan = (serverApiUrl) => {
@@ -126,8 +126,6 @@ const scan = (serverApiUrl) => {
         nodes.push(node);
     })
 
-    // console.log(nodes);
-
     // POST request options
     const requestOptions = {
         method: 'POST',
@@ -148,7 +146,7 @@ const scan = (serverApiUrl) => {
         })
         .catch(error => {
             // Handle any errors that occurred during the fetch
-            console.error('There was a problem with the fetch operation:', error);
+            alert('There was a problem with the fetch operation: ' + error.message);
         });
 };
 
@@ -173,6 +171,47 @@ btnRunScan.addEventListener('click', async function () {
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: scan,
-        args: [serverApiUrl.value]
+        args: [document.getElementById('serverApiUrl').value]
     });
 });
+
+btnScanLeaves.addEventListener('click', async function () {
+    const [tab] = await chrome.tabs.query({
+        active: true, currentWindow: true
+    });
+    chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        function: scan,
+        args: [document.getElementById('serverApiUrl').value]
+    });
+});
+
+const checkFunc = () => {
+    console.log('Check', document.getElementById('serverApiUrl').value, '...')
+    fetch(document.getElementById('serverApiUrl').value)
+        .then((response) => {
+            if (response.status != 200) {
+                document.getElementById('serverOnline').setAttribute('style', 'display: none;');
+                document.getElementById('serverOffline').removeAttribute('style');
+                document.querySelectorAll('.actionBtn').forEach(el => {
+                    el.setAttribute('disabled', true)
+                });
+            } else {
+                document.getElementById('serverOnline').removeAttribute('style');
+                document.getElementById('serverOffline').setAttribute('style', 'display: none;');
+                document.querySelectorAll('.actionBtn').forEach(el => {
+                    el.removeAttribute('disabled')
+                });
+            }
+        })
+        .catch(() => {
+            document.getElementById('serverOnline').setAttribute('style', 'display: none;');
+            document.getElementById('serverOffline').removeAttribute('style');
+            document.querySelectorAll('.actionBtn').forEach(el => {
+                el.setAttribute('disabled', true)
+            });
+        });
+}
+
+checkFunc()
+let check = setInterval(checkFunc, 3000);
