@@ -25,6 +25,16 @@ def add_tree_node(node: TreeNode):
     return True
 
 
+def update_tree_node(id: str, data: dict):
+    try:
+        with Session.begin() as session:
+            session.query(TreeNode).filter(TreeNode.id == id).update(data)
+    except Exception as e:
+        print(e)
+        return False
+    return True
+
+
 def get_tree_node(id: str):
     return Session().query(TreeNode).get(id)
 
