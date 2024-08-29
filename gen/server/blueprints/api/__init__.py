@@ -25,6 +25,10 @@ def index():
 def add_nodes():
     data = request.get_json()
     for node in data:
+        if 'id' not in node:
+            print(node)
+            print()
+            continue
         tree_node = get_tree_node(node['id'])
         if tree_node is None:
             tree_node = TreeNode()
@@ -37,16 +41,17 @@ def add_nodes():
             if years[1] is not None:
                 tree_node.died_in = date(year=years[1], month=1, day=1)
             add_tree_node(tree_node)
-            print(node['id'], node['name'])
+            if node['is_root'] is True:
+                add_root(node['id'])
+            if 'father_id' in node:
+                add_paternal_filiation(node['father_id'], node['id'])
+            if 'mother_id' in node:
+                add_maternal_filiation(node['mother_id'], node['id'])
+                print(node['id'], node['name'])
         else:
             if len(data) == 1:
                 update_tree_node(tree_node.id, {TreeNode.leaf: True})
-        if node['is_root'] is True:
-            add_root(node['id'])
-        if 'father_id' in node:
-            add_paternal_filiation(node['father_id'], node['id'])
-        if 'mother_id' in node:
-            add_maternal_filiation(node['mother_id'], node['id'])
+                print('(UPDATE)', node['id'], node['name'])
     return {}, 201
 
 

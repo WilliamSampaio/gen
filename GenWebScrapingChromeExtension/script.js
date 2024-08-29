@@ -204,49 +204,52 @@ function scan(serverApiUrl, scanningLeaves = false) {
 
                     let children = getXPathNode('div/div/div[2]/div[2]/div/div/div/ul', spouses);
 
-                    if (children.childNodes !== null) {
+                    if (children !== null) {
 
-                        children.childNodes.forEach(child => {
-                            let node = {};
+                        if (children.childNodes !== null) {
 
-                            if (rootNode.gender == 'M') {
-                                node.father_id = rootNode.id;
-                            } else {
-                                node.mother_id = rootNode.id;
-                            }
+                            children.childNodes.forEach(child => {
+                                let node = {};
 
-                            let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
-
-                            if (id !== null) {
-                                node.id = id.textContent;
-                            }
-
-                            let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
-
-                            if (name !== null) {
-                                node.name = name.textContent;
-                            }
-
-                            let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
-
-                            if (years !== null) {
-                                node.years = years.textContent;
-                            }
-
-                            let gender = getXPathNode('div/div/div[1]/div', child);
-
-                            if (gender !== null) {
-                                if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
-                                    node.gender = 'F';
-                                } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
-                                    node.gender = 'M';
+                                if (rootNode.gender == 'M') {
+                                    node.father_id = rootNode.id;
+                                } else {
+                                    node.mother_id = rootNode.id;
                                 }
-                            }
 
-                            node.is_root = false;
+                                let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
 
-                            nodes.push(node);
-                        })
+                                if (id !== null) {
+                                    node.id = id.textContent;
+                                }
+
+                                let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
+
+                                if (name !== null) {
+                                    node.name = name.textContent;
+                                }
+
+                                let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
+
+                                if (years !== null) {
+                                    node.years = years.textContent;
+                                }
+
+                                let gender = getXPathNode('div/div/div[1]/div', child);
+
+                                if (gender !== null) {
+                                    if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
+                                        node.gender = 'F';
+                                    } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
+                                        node.gender = 'M';
+                                    }
+                                }
+
+                                node.is_root = false;
+
+                                nodes.push(node);
+                            })
+                        }
                     }
                 });
             }
@@ -346,7 +349,7 @@ btnScanLeaves.addEventListener('click', async function () {
                 args: [items.__gen_extension.leaves.shift()]
             });
             console.log('Loading page...');
-            await sleep(7000);
+            await sleep(10000);
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: scan,

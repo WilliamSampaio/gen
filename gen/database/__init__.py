@@ -103,9 +103,9 @@ def get_leaves():
     sql = """
     select distinct t.id from tree t
     where
-        t.id not in (select fo.father_id from father_of fo) and
-        t.id not in (select mo.mother_id from mother_of mo) and
-        t.leaf is false
-    order by t.id asc
+        (	t.id not in (select fo.father_id from father_of fo) and
+            t.id not in (select mo.mother_id from mother_of mo)
+        ) and t.leaf is false
+    -- order by t.id asc
     """
     return [x[0] for x in Session().execute(text(sql)).all()]
