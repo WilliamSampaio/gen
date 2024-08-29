@@ -349,7 +349,7 @@ btnScanLeaves.addEventListener('click', async function () {
                 args: [items.__gen_extension.leaves.shift()]
             });
             console.log('Loading page...');
-            await sleep(10000);
+            await sleep(5000);
             await chrome.scripting.executeScript({
                 target: { tabId: tab.id },
                 function: scan,
