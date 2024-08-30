@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column(
             'tree_id',
             sa.String(8),
-            sa.ForeignKey('tree.id', ondelete='CASCADE'),
+            sa.ForeignKey('tree.id', ondelete='CASCADE', onupdate='CASCADE'),
             unique=True,
             nullable=False,
         ),

@@ -15,6 +15,7 @@ class TreeNode(Base):
     died_in = Column(Date())
     gender = Column(CHAR())
     leaf = Column(Boolean(), nullable=False, server_default=false())
+    scraped = Column(Boolean(), nullable=True)
     inserted_in = Column(
         DateTime(),
         nullable=False,

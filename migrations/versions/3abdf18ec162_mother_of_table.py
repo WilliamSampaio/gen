@@ -24,12 +24,12 @@ def upgrade() -> None:
         sa.Column(
             'mother_id',
             sa.String(8),
-            sa.ForeignKey('tree.id', ondelete='CASCADE'),
+            sa.ForeignKey('tree.id', ondelete='CASCADE', onupdate='CASCADE'),
         ),
         sa.Column(
             'son_id',
             sa.String(8),
-            sa.ForeignKey('tree.id', ondelete='CASCADE'),
+            sa.ForeignKey('tree.id', ondelete='CASCADE', onupdate='CASCADE'),
         ),
         sa.Column(
             'inserted_in',

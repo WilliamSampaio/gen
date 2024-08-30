@@ -49,8 +49,13 @@ def add_nodes():
                 add_maternal_filiation(node['mother_id'], node['id'])
                 print(node['id'], node['name'])
         else:
+            update = {}
+            if node['id'] == data[0]['id']:
+                update[TreeNode.scraped] = True
             if len(data) == 1:
-                update_tree_node(tree_node.id, {TreeNode.leaf: True})
+                update[TreeNode.leaf] = True
+            if bool(update):
+                update_tree_node(tree_node.id, update)
                 print('(UPDATE)', node['id'], node['name'])
     return {}, 201
 

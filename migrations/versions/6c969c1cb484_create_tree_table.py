@@ -28,6 +28,7 @@ def upgrade() -> None:
         sa.Column(
             'leaf', sa.Boolean(), nullable=False, server_default=sa.false()
         ),
+        sa.Column('scraped', sa.Boolean(), nullable=True),
         sa.Column(
             'inserted_in',
             sa.DateTime(),
