@@ -17,8 +17,10 @@ def add_tree_node(node: TreeNode):
         else:
             node.gender = str(node.gender).upper()
     try:
-        with Session.begin() as session:
-            session.add(node)
+        session = Session()
+        session.add(node)
+        session.commit()
+        session.close()
     except Exception as e:
         print(e)
         return False
@@ -27,8 +29,10 @@ def add_tree_node(node: TreeNode):
 
 def update_tree_node(id: str, data: dict):
     try:
-        with Session.begin() as session:
-            session.query(TreeNode).filter(TreeNode.id == id).update(data)
+        session = Session()
+        session.query(TreeNode).filter(TreeNode.id == id).update(data)
+        session.commit()
+        session.close()
     except Exception as e:
         print(e)
         return False
@@ -36,14 +40,19 @@ def update_tree_node(id: str, data: dict):
 
 
 def get_tree_node(id: str):
-    return Session().query(TreeNode).get(id)
+    session = Session()
+    result = session.query(TreeNode).get(id)
+    session.close()
+    return result
 
 
 def remove_tree_node(id: str):
     try:
-        with Session.begin() as session:
-            node = session.query(TreeNode).get(id)
-            session.delete(node)
+        session = Session()
+        node = session.query(TreeNode).get(id)
+        session.delete(node)
+        session.commit()
+        session.close()
     except Exception as e:
         print(e)
         return False
@@ -54,8 +63,10 @@ def add_root(tree_id: str):
     try:
         root = Root()
         root.tree_id = tree_id
-        with Session.begin() as session:
-            session.add(root)
+        session = Session()
+        session.add(root)
+        session.commit()
+        session.close()
     except Exception as e:
         print(e)
         return False
@@ -67,8 +78,10 @@ def add_paternal_filiation(father_id: str, son_id: str):
         filiation = FatherOf()
         filiation.father_id = father_id
         filiation.son_id = son_id
-        with Session.begin() as session:
-            session.add(filiation)
+        session = Session()
+        session.add(filiation)
+        session.commit()
+        session.close()
     except Exception as e:
         print(e)
         return False
@@ -80,8 +93,10 @@ def add_maternal_filiation(mother_id: str, son_id: str):
         filiation = MotherOf()
         filiation.mother_id = mother_id
         filiation.son_id = son_id
-        with Session.begin() as session:
-            session.add(filiation)
+        session = Session()
+        session.add(filiation)
+        session.commit()
+        session.close()
     except Exception as e:
         print(e)
         return False
@@ -96,7 +111,10 @@ def get_roots():
         t.id not in (select fo.son_id from father_of fo) and
         t.id not in (select mo.son_id from mother_of mo)
     """
-    return [x[0] for x in Session().execute(text(sql)).all()]
+    session = Session()
+    result = [x[0] for x in session.execute(text(sql)).all()]
+    session.close()
+    return result
 
 
 def get_leaves():
@@ -109,4 +127,7 @@ def get_leaves():
         t.id not in (select mo.mother_id from mother_of mo)
     order by t.inserted_in desc
     """
-    return [x[0] for x in Session().execute(text(sql)).all()]
+    session = Session()
+    result = [x[0] for x in session.execute(text(sql)).all()]
+    session.close()
+    return result

@@ -300,67 +300,74 @@ btnRunScan.addEventListener('click', async function () {
     });
 });
 
-btnScanLeaves.addEventListener('click', async function () {
+btnScanLeaves.addEventListener('click', () => {
+    chrome.runtime.sendMessage({
+        'action': 'scan_leaves',
+        'server_url': document.getElementById('serverApiUrl').value
+    })
+})
 
-    if (!window.confirm(`Press OK to continue...`)) {
-        return;
-    }
+// btnScanLeaves.addEventListener('click', async function () {
 
-    fetch(document.getElementById('serverApiUrl').value + '/leaves')
-        .then(response => {
-            if (response.status != 200) {
-                throw new Error(`Something went wrong (Status: ${response.status})`);
-            }
-            return response.json();
-        })
+//     if (!window.confirm(`Press OK to continue...`)) {
+//         return;
+//     }
 
-        .then(json => {
-            if (chrome.storage) {
-                chrome.storage.local.get('__gen_extension', function (items) {
-                    if (Object.keys(items).length === 0) {
-                        throw new Error('Storage not seted!')
-                    }
-                    items.__gen_extension.leaves = [];
-                    items.__gen_extension.leaves.push(...json);
-                    chrome.storage.local.set(items)
-                        .then(() => {
-                            console.log('Items stored!');
-                        })
-                        .catch(error => {
-                            throw new error;
-                        })
-                });
-            } else {
-                alert("chrome.storage API is not available.");
-            }
-        })
-        .catch(error => {
-            alert('Error: ' + error.message)
-        })
+//     fetch(document.getElementById('serverApiUrl').value + '/leaves')
+//         .then(response => {
+//             if (response.status != 200) {
+//                 throw new Error(`Something went wrong (Status: ${response.status})`);
+//             }
+//             return response.json();
+//         })
 
-    chrome.storage.local.get('__gen_extension', async function (items) {
-        while (items.__gen_extension.leaves.length > 0) {
-            const [tab] = await chrome.tabs.query({
-                active: true, currentWindow: true
-            });
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                function: id => { window.location.href = 'https://www.familysearch.org/tree/person/details/' + id },
-                args: [items.__gen_extension.leaves.shift()]
-            });
-            console.log('Loading page...');
-            await sleep(5000);
-            await chrome.scripting.executeScript({
-                target: { tabId: tab.id },
-                function: scan,
-                args: [document.getElementById('serverApiUrl').value, true]
-            });
-            console.log('Length: ', items.__gen_extension.leaves.length);
-        };
-        chrome.storage.local.set(items);
-        alert('Finish!');
-    });
-});
+//         .then(json => {
+//             if (chrome.storage) {
+//                 chrome.storage.local.get('__gen_extension', function (items) {
+//                     if (Object.keys(items).length === 0) {
+//                         throw new Error('Storage not seted!')
+//                     }
+//                     items.__gen_extension.leaves = [];
+//                     items.__gen_extension.leaves.push(...json);
+//                     chrome.storage.local.set(items)
+//                         .then(() => {
+//                             console.log('Items stored!');
+//                         })
+//                         .catch(error => {
+//                             throw new error;
+//                         })
+//                 });
+//             } else {
+//                 alert("chrome.storage API is not available.");
+//             }
+//         })
+//         .catch(error => {
+//             alert('Error: ' + error.message)
+//         })
+
+//     chrome.storage.local.get('__gen_extension', async function (items) {
+//         while (items.__gen_extension.leaves.length > 0) {
+//             const [tab] = await chrome.tabs.query({
+//                 active: true, currentWindow: true
+//             });
+//             await chrome.scripting.executeScript({
+//                 target: { tabId: tab.id },
+//                 function: id => { window.location.href = 'https://www.familysearch.org/tree/person/details/' + id },
+//                 args: [items.__gen_extension.leaves.shift()]
+//             });
+//             console.log('Loading page...');
+//             await sleep(5000);
+//             await chrome.scripting.executeScript({
+//                 target: { tabId: tab.id },
+//                 function: scan,
+//                 args: [document.getElementById('serverApiUrl').value, true]
+//             });
+//             console.log('Length: ', items.__gen_extension.leaves.length);
+//         };
+//         chrome.storage.local.set(items);
+//         alert('Finish!');
+//     });
+// });
 
 const checkFunc = () => {
     console.log('Check', document.getElementById('serverApiUrl').value, '...')
@@ -390,5 +397,5 @@ const checkFunc = () => {
 }
 
 setUpStorage()
-checkFunc()
-let check = setInterval(checkFunc, 3000);
+// checkFunc()
+// let check = setInterval(checkFunc, 3000);
