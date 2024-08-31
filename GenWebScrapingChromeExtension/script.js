@@ -1,5 +1,16 @@
 const btnRunScan = document.getElementById('btnRunScan');
 const btnScanLeaves = document.getElementById('btnScanLeaves');
+const btnStopScan = document.getElementById('btnStopScan');
+
+chrome.storage.local.get('_gen_extension').then(items => {
+    if (items._gen_extension.status == 'scanning') {
+        btnScanLeaves.setAttribute('style', 'display: none;')
+        btnStopScan.removeAttribute('style')
+    } else if (items._gen_extension.status == '') {
+        btnScanLeaves.removeAttribute('style')
+        btnStopScan.setAttribute('style', 'display: none;')
+    }
+})
 
 function sleep(time) {
     return new Promise(resolve => setTimeout(resolve, time));
@@ -304,6 +315,18 @@ btnScanLeaves.addEventListener('click', () => {
     chrome.runtime.sendMessage({
         'action': 'scan_leaves',
         'server_url': document.getElementById('serverApiUrl').value
+    }).then(response => {
+        btnScanLeaves.setAttribute('style', 'display: none;')
+        btnStopScan.removeAttribute('style')
+    })
+})
+
+btnStopScan.addEventListener('click', () => {
+    chrome.runtime.sendMessage({
+        'action': 'stop_scan'
+    }).then(response => {
+        btnStopScan.setAttribute('style', 'display: none;')
+        btnScanLeaves.removeAttribute('style')
     })
 })
 
@@ -396,6 +419,6 @@ const checkFunc = () => {
         });
 }
 
-setUpStorage()
+// setUpStorage()
 // checkFunc()
 // let check = setInterval(checkFunc, 3000);

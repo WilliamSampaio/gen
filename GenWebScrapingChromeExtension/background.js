@@ -137,6 +137,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
         })
     }
+
+    if (message.action == 'stop_scan') {
+        chrome.storage.local.get('_gen_extension').then(items => {
+            items._gen_extension = {
+                "status": "",
+                "leaves": [],
+                "tabs": []
+            }
+            chrome.storage.local.set(items)
+        })
+    }
 })
 
 function contentScript(tabId) {
