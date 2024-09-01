@@ -11,8 +11,16 @@
 <body>
     <h5 class="card-title">GenWebScrapingChromeExtension</h5>
     <div class="mb-1" id="msg"></div>
-    <label for="serverApiUrl" class="form-label">Server API URL:</label>
-    <input type="text" class="form-control" id="serverApiUrl" value="http://127.0.0.1:5784/api">
+    <div class="row">
+        <div class="col-9">
+            <label for="serverApiUrl" class="form-label">Server API URL:</label>
+            <input type="text" class="form-control" id="serverApiUrl" value="http://127.0.0.1:5784/api">
+        </div>
+        <div class="col-3">
+            <label for="tabsAmount" class="form-label">Tabs:</label>
+            <input type="number" class="form-control" id="tabsAmount" min="1" max="5">
+        </div>
+    </div>
     <hr>
     <div class="d-flex justify-content-between">
         <button id="btnRunScan" class="btn btn-success btn-sm actionBtn">Scan & Save</button>

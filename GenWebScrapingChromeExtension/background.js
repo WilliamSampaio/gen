@@ -1,9 +1,11 @@
+// On Installed 
 chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.local.set({
         "_gen_extension": {
             "status": "ping",
             "leaves": [],
-            "tabs": []
+            "tabs": [],
+            "tabs_amount": 3
         }
     })
     console.log("Installed", details)
@@ -12,6 +14,7 @@ chrome.runtime.onInstalled.addListener((details) => {
     })
 })
 
+// On Message
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action == 'scan_leaves') {
@@ -28,24 +31,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     items._gen_extension.status = 'scanning'
                     items._gen_extension.server_url = message.server_url
 
-                    chrome.tabs.create({
-                        'active': false,
-                        'url': 'https://www.familysearch.org/pt/',
-                    }).then(tab => {
-                        items._gen_extension.tabs.push(tab.id)
-                    })
-                    chrome.tabs.create({
-                        'active': false,
-                        'url': 'https://www.familysearch.org/pt/',
-                    }).then(tab => {
-                        items._gen_extension.tabs.push(tab.id)
-                    })
-                    chrome.tabs.create({
-                        'active': false,
-                        'url': 'https://www.familysearch.org/pt/',
-                    }).then(tab => {
-                        items._gen_extension.tabs.push(tab.id)
-                    })
+                    for (let i = 0; i < items._gen_extension.tabs_amount; i++) {
+                        chrome.tabs.create({
+                            'active': false,
+                            'url': 'https://www.familysearch.org/pt/',
+                        }).then(tab => {
+                            items._gen_extension.tabs.push(tab.id)
+                        })
+                    }
 
                     chrome.storage.local.set(items).then(() => {
                         console.info('Extension', items)
@@ -60,11 +53,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 })
                             })
                         })
+                        sendResponse({ 'success': true })
                     })
                 })
             })
             .catch(error => {
                 console.error('Error:', error.message)
+                sendResponse({ 'success': false })
             })
     }
 
@@ -140,12 +135,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action == 'stop_scan') {
         chrome.storage.local.get('_gen_extension').then(items => {
-            items._gen_extension = {
-                "status": "ping",
-                "leaves": [],
-                "tabs": []
-            }
-            chrome.storage.local.set(items)
+            items._gen_extension.status = 'ping'
+            items._gen_extension.leaves = []
+            items._gen_extension.tabs = []
+            chrome.storage.local.set(items).then(() => {
+                sendResponse({ 'success': true })
+            })
         })
     }
 
@@ -171,6 +166,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                         })
                     })
             }
+        })
+    }
+
+    if (message.action == 'change_tabs_amount') {
+        chrome.storage.local.get('_gen_extension').then(items => {
+            items._gen_extension.tabs_amount = parseInt(message.amount)
+            chrome.storage.local.set(items)
         })
     }
 

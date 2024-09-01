@@ -1,8 +1,11 @@
-const btnRunScan = document.getElementById('btnRunScan');
-const btnScanLeaves = document.getElementById('btnScanLeaves');
-const btnStopScan = document.getElementById('btnStopScan');
+const btnRunScan = document.getElementById('btnRunScan')
+const btnScanLeaves = document.getElementById('btnScanLeaves')
+const btnStopScan = document.getElementById('btnStopScan')
+const tabsAmount = document.getElementById('tabsAmount')
 
 chrome.storage.local.get('_gen_extension').then(items => {
+    tabsAmount.value = items._gen_extension.tabs_amount
+
     if (items._gen_extension.status == 'scanning') {
         btnScanLeaves.setAttribute('style', 'display: none;')
         btnStopScan.removeAttribute('style')
@@ -11,294 +14,6 @@ chrome.storage.local.get('_gen_extension').then(items => {
         btnStopScan.setAttribute('style', 'display: none;')
     }
 })
-
-function sleep(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
-}
-
-const setUpStorage = () => {
-    if (chrome.storage) {
-        chrome.storage.local.get('__gen_extension', function (items) {
-            if (Object.keys(items).length === 0) {
-                chrome.storage.local.set({
-                    __gen_extension: {
-                        leaves: [],
-                        settings: {}
-                    }
-                }).catch(error => {
-                    throw new error;
-                })
-            }
-        });
-    } else {
-        throw new Error("chrome.storage API is not available.");
-    }
-}
-
-function scan(serverApiUrl, scanningLeaves = false) {
-    const XP_ID = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button';
-    const XP_GENDER = [
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span',
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span'
-    ];
-    const XP_NAME = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[1]/div/div/div[1]/span';
-    const XP_CHILDREN_ROOT = [
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]',
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]'
-    ];
-    const XP_YEARS = [
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span',
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span',
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[1]/div/div/ul/div[1]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span',
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span',
-        '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span'
-    ];
-
-    const getXPathNode = (xpath, ctxNode = null) => {
-        return document.evaluate(
-            xpath,
-            ctxNode ?? document,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null
-        ).singleNodeValue;
-    }
-
-    // set true: Show All Family Members
-    // try {
-    //     if (getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/div').getAttribute("aria-checked") == 'false') {
-    //         getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[1]/div/input').click();
-    //     }
-    // } catch {
-    //     console.log('set true: Show All Family Members FAIL!');
-    // }
-
-    const nodes = [];
-    const rootNode = {};
-
-    XP_GENDER.forEach(xp => {
-
-        let gender = getXPathNode(xp);
-
-        if (gender === null) {
-            return;
-        }
-
-        rootNode.gender = gender.textContent[0];
-    })
-
-    let id = getXPathNode(XP_ID);
-
-    if (id !== null) {
-        rootNode.id = id.textContent;
-    }
-
-    let name = getXPathNode(XP_NAME);
-
-    if (name !== null) {
-        rootNode.name = name.textContent;
-    }
-
-    // let years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
-
-    // if (years !== null) {
-    //     rootNode.years = years.textContent;
-    // }
-
-    // let years = null;
-
-    // if (rootNode.gender == 'F') {
-    //     years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[3]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
-    // } else {
-    //     years = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[1]/div/div[2]/div[1]/div/div/div[1]/div/div/ul/div[1]/div/div/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span');
-    // }
-
-    // if (years !== null) {
-    //     rootNode.years = years.textContent;
-    // }
-
-    // let father_id = null;
-
-    // if (rootNode.gender == 'F') {
-    //     father_id = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[3]/div/div[2]/div/div/div/div[1]/div/div/ul/div[1]/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button');
-    // } else {
-    //     father_id = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[3]/div/div[2]/div/div/div/div[1]/div/div/ul/div[1]/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button');
-    // }
-
-    // rootNode.father_id = father_id !== null ? father_id.textContent : null;
-
-    // let mother_id = null;
-
-    // if (rootNode.gender == 'F') {
-    //     mother_id = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[3]/div/div[2]/div/div/div/div[1]/div/div/ul/div[3]/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button');
-    // } else {
-    //     mother_id = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[4]/div[3]/div/div[2]/div/div/div/div[1]/div/div/ul/div[3]/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button');
-    // }
-
-    // rootNode.mother_id = mother_id !== null ? mother_id.textContent : null;
-
-    rootNode.is_root = scanningLeaves ? false : window.confirm(`Press OK if "${rootNode.name}" is a root node.`);
-
-    nodes.push(rootNode);
-
-    XP_YEARS.forEach(xp => {
-
-        let years = getXPathNode(xp);
-
-        if (years === null) {
-            return;
-        }
-
-        if (years !== null) {
-            rootNode.years = years.textContent;
-        }
-    });
-
-    let children = getXPathNode('/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[3]/div/div/div/div/div/div/div/div[2]/div[1]/div/div[2]/div/div/div/div[2]/div[2]/div/div/div/ul');
-
-    if (children !== null && children.childNodes !== null) {
-
-        children.childNodes.forEach(child => {
-            let node = {};
-
-            if (rootNode.gender == 'M') {
-                node.father_id = rootNode.id;
-            } else {
-                node.mother_id = rootNode.id;
-            }
-
-            let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
-
-            if (id !== null) {
-                node.id = id.textContent;
-            }
-
-            let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
-
-            if (name !== null) {
-                node.name = name.textContent;
-            }
-
-            let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
-
-            if (years !== null) {
-                node.years = years.textContent;
-            }
-
-            let gender = getXPathNode('div/div/div[1]/div', child);
-
-            if (gender !== null) {
-                if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
-                    node.gender = 'F';
-                } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
-                    node.gender = 'M';
-                }
-            }
-
-            node.is_root = false;
-
-            nodes.push(node);
-        })
-    } else {
-
-        XP_CHILDREN_ROOT.forEach(xp => {
-
-            let childrenRoot = getXPathNode(xp);
-
-            if (childrenRoot === null) {
-                return;
-            }
-
-            if (childrenRoot.childNodes !== null) {
-
-                childrenRoot.childNodes.forEach(spouses => {
-
-                    let children = getXPathNode('div/div/div[2]/div[2]/div/div/div/ul', spouses);
-
-                    if (children !== null) {
-
-                        if (children.childNodes !== null) {
-
-                            children.childNodes.forEach(child => {
-                                let node = {};
-
-                                if (rootNode.gender == 'M') {
-                                    node.father_id = rootNode.id;
-                                } else {
-                                    node.mother_id = rootNode.id;
-                                }
-
-                                let id = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[4]/button', child);
-
-                                if (id !== null) {
-                                    node.id = id.textContent;
-                                }
-
-                                let name = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/a/div/div/div[1]/span', child);
-
-                                if (name !== null) {
-                                    node.name = name.textContent;
-                                }
-
-                                let years = getXPathNode('div/div/div[2]/div/div/div[1]/div/div/div[2]/div/span/div/div[2]/span', child);
-
-                                if (years !== null) {
-                                    node.years = years.textContent;
-                                }
-
-                                let gender = getXPathNode('div/div/div[1]/div', child);
-
-                                if (gender !== null) {
-                                    if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(214, 64, 110)') {
-                                        node.gender = 'F';
-                                    } else if (window.getComputedStyle(gender, null).getPropertyValue('background-color') == 'rgb(57, 174, 203)') {
-                                        node.gender = 'M';
-                                    }
-                                }
-
-                                node.is_root = false;
-
-                                nodes.push(node);
-                            })
-                        }
-                    }
-                });
-            }
-        })
-    }
-
-    // console.log(nodes);
-    // return;
-
-    // POST request options
-    const requestOptions = {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(nodes)
-    };
-
-    // Make the POST request
-    fetch(serverApiUrl + '/node', requestOptions)
-        .then(response => {
-            if (response.status != 201) {
-                if (!scanningLeaves) {
-                    alert('Failed to save data.')
-                }
-            } else {
-                if (!scanningLeaves) {
-                    alert('Data saved successfully!')
-                }
-            }
-        })
-        .catch(error => {
-            // Handle any errors that occurred during the fetch
-            if (!scanningLeaves) {
-                alert('There was a problem with the fetch operation: ' + error.message);
-            }
-        });
-};
 
 btnRunScan.addEventListener('click', async function () {
     const [tab] = await chrome.tabs.query({
@@ -316,8 +31,11 @@ btnScanLeaves.addEventListener('click', () => {
         'action': 'scan_leaves',
         'server_url': document.getElementById('serverApiUrl').value
     }).then(response => {
-        btnScanLeaves.setAttribute('style', 'display: none;')
-        btnStopScan.removeAttribute('style')
+        if (response.success) {
+            btnScanLeaves.setAttribute('style', 'display: none;')
+            btnStopScan.removeAttribute('style')
+            tabsAmount.setAttribute('disabled', 'true')
+        }
     })
 })
 
@@ -325,10 +43,59 @@ btnStopScan.addEventListener('click', () => {
     chrome.runtime.sendMessage({
         'action': 'stop_scan'
     }).then(response => {
-        btnStopScan.setAttribute('style', 'display: none;')
-        btnScanLeaves.removeAttribute('style')
+        if (response.success) {
+            btnStopScan.setAttribute('style', 'display: none;')
+            btnScanLeaves.removeAttribute('style')
+            tabsAmount.removeAttribute('disabled')
+        }
     })
 })
+
+tabsAmount.addEventListener('change', () => {
+    chrome.runtime.sendMessage({
+        'action': 'change_tabs_amount',
+        'amount': tabsAmount.value
+    })
+})
+
+const ping = () => {
+    chrome.storage.local.get('_gen_extension').then(items => {
+        if (items._gen_extension.status == 'ping') {
+            console.log('Check', document.getElementById('serverApiUrl').value, '...')
+            chrome.runtime.sendMessage({
+                'action': 'ping',
+                'server_url': document.getElementById('serverApiUrl').value
+            }).then((response) => {
+                if (response.response == 'server_on') {
+                    document.getElementById('serverOnline').removeAttribute('style');
+                    document.getElementById('serverOffline').setAttribute('style', 'display: none;');
+                    document.querySelectorAll('.actionBtn').forEach(el => {
+                        el.removeAttribute('disabled')
+                    });
+                    document.getElementById('msg').textContent = ''
+                }
+                if (response.response == 'server_off') {
+                    document.getElementById('serverOnline').setAttribute('style', 'display: none;');
+                    document.getElementById('serverOffline').removeAttribute('style');
+                    document.querySelectorAll('.actionBtn').forEach(el => {
+                        el.setAttribute('disabled', true)
+                    })
+                    if (response.hasOwnProperty('message')) {
+                        document.getElementById('msg').innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <b>Server Error!</b> ${response.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`
+                    }
+                }
+            })
+        }
+    })
+}
+
+ping()
+let check = setInterval(ping, 3000);
+
 
 // btnScanLeaves.addEventListener('click', async function () {
 
@@ -391,41 +158,3 @@ btnStopScan.addEventListener('click', () => {
 //         alert('Finish!');
 //     });
 // });
-
-const ping = () => {
-    chrome.storage.local.get('_gen_extension').then(items => {
-        if (items._gen_extension.status == 'ping') {
-            console.log('Check', document.getElementById('serverApiUrl').value, '...')
-            chrome.runtime.sendMessage({
-                'action': 'ping',
-                'server_url': document.getElementById('serverApiUrl').value
-            }).then((response) => {
-                if (response.response == 'server_on') {
-                    document.getElementById('serverOnline').removeAttribute('style');
-                    document.getElementById('serverOffline').setAttribute('style', 'display: none;');
-                    document.querySelectorAll('.actionBtn').forEach(el => {
-                        el.removeAttribute('disabled')
-                    });
-                    document.getElementById('msg').textContent = ''
-                }
-                if (response.response == 'server_off') {
-                    document.getElementById('serverOnline').setAttribute('style', 'display: none;');
-                    document.getElementById('serverOffline').removeAttribute('style');
-                    document.querySelectorAll('.actionBtn').forEach(el => {
-                        el.setAttribute('disabled', true)
-                    })
-                    if (response.hasOwnProperty('message')) {
-                        document.getElementById('msg').innerHTML = `
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <b>Server Error!</b> ${response.message}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>`
-                    }
-                }
-            })
-        }
-    })
-}
-
-ping()
-let check = setInterval(ping, 3000);
