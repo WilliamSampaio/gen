@@ -1,6 +1,7 @@
 const btnRunScan = document.getElementById('btnRunScan')
 const btnScanLeaves = document.getElementById('btnScanLeaves')
 const btnStopScan = document.getElementById('btnStopScan')
+const serverApiUrl = document.getElementById('serverApiUrl')
 const tabsAmount = document.getElementById('tabsAmount')
 
 chrome.storage.local.get('_gen_extension').then(items => {
@@ -9,9 +10,13 @@ chrome.storage.local.get('_gen_extension').then(items => {
     if (items._gen_extension.status == 'scanning') {
         btnScanLeaves.setAttribute('style', 'display: none;')
         btnStopScan.removeAttribute('style')
+        serverApiUrl.setAttribute('disabled', 'true')
+        tabsAmount.setAttribute('disabled', 'true')
     } else {
         btnScanLeaves.removeAttribute('style')
         btnStopScan.setAttribute('style', 'display: none;')
+        serverApiUrl.removeAttribute('disabled')
+        tabsAmount.removeAttribute('disabled')
     }
 })
 
@@ -22,18 +27,19 @@ btnRunScan.addEventListener('click', async function () {
     chrome.scripting.executeScript({
         target: { tabId: tab.id },
         function: scan,
-        args: [document.getElementById('serverApiUrl').value]
+        args: [serverApiUrl.value]
     });
 });
 
 btnScanLeaves.addEventListener('click', () => {
     chrome.runtime.sendMessage({
         'action': 'scan_leaves',
-        'server_url': document.getElementById('serverApiUrl').value
+        'server_url': serverApiUrl.value
     }).then(response => {
         if (response.success) {
             btnScanLeaves.setAttribute('style', 'display: none;')
             btnStopScan.removeAttribute('style')
+            serverApiUrl.setAttribute('disabled', 'true')
             tabsAmount.setAttribute('disabled', 'true')
         }
     })
@@ -46,6 +52,7 @@ btnStopScan.addEventListener('click', () => {
         if (response.success) {
             btnStopScan.setAttribute('style', 'display: none;')
             btnScanLeaves.removeAttribute('style')
+            serverApiUrl.removeAttribute('disabled')
             tabsAmount.removeAttribute('disabled')
         }
     })
@@ -61,10 +68,10 @@ tabsAmount.addEventListener('change', () => {
 const ping = () => {
     chrome.storage.local.get('_gen_extension').then(items => {
         if (items._gen_extension.status == 'ping') {
-            console.log('Check', document.getElementById('serverApiUrl').value, '...')
+            console.log('Check', serverApiUrl.value, '...')
             chrome.runtime.sendMessage({
                 'action': 'ping',
-                'server_url': document.getElementById('serverApiUrl').value
+                'server_url': serverApiUrl.value
             }).then((response) => {
                 if (response.response == 'server_on') {
                     document.getElementById('serverOnline').removeAttribute('style');
