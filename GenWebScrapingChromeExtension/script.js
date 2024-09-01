@@ -6,7 +6,7 @@ chrome.storage.local.get('_gen_extension').then(items => {
     if (items._gen_extension.status == 'scanning') {
         btnScanLeaves.setAttribute('style', 'display: none;')
         btnStopScan.removeAttribute('style')
-    } else if (items._gen_extension.status == '') {
+    } else {
         btnScanLeaves.removeAttribute('style')
         btnStopScan.setAttribute('style', 'display: none;')
     }
@@ -392,33 +392,40 @@ btnStopScan.addEventListener('click', () => {
 //     });
 // });
 
-const checkFunc = () => {
-    console.log('Check', document.getElementById('serverApiUrl').value, '...')
-    fetch(document.getElementById('serverApiUrl').value)
-        .then((response) => {
-            if (response.status != 200) {
-                document.getElementById('serverOnline').setAttribute('style', 'display: none;');
-                document.getElementById('serverOffline').removeAttribute('style');
-                document.querySelectorAll('.actionBtn').forEach(el => {
-                    el.setAttribute('disabled', true)
-                });
-            } else {
-                document.getElementById('serverOnline').removeAttribute('style');
-                document.getElementById('serverOffline').setAttribute('style', 'display: none;');
-                document.querySelectorAll('.actionBtn').forEach(el => {
-                    el.removeAttribute('disabled')
-                });
-            }
-        })
-        .catch(() => {
-            document.getElementById('serverOnline').setAttribute('style', 'display: none;');
-            document.getElementById('serverOffline').removeAttribute('style');
-            document.querySelectorAll('.actionBtn').forEach(el => {
-                el.setAttribute('disabled', true)
-            });
-        });
+const ping = () => {
+    chrome.storage.local.get('_gen_extension').then(items => {
+        if (items._gen_extension.status == 'ping') {
+            console.log('Check', document.getElementById('serverApiUrl').value, '...')
+            chrome.runtime.sendMessage({
+                'action': 'ping',
+                'server_url': document.getElementById('serverApiUrl').value
+            }).then((response) => {
+                if (response.response == 'server_on') {
+                    document.getElementById('serverOnline').removeAttribute('style');
+                    document.getElementById('serverOffline').setAttribute('style', 'display: none;');
+                    document.querySelectorAll('.actionBtn').forEach(el => {
+                        el.removeAttribute('disabled')
+                    });
+                    document.getElementById('msg').textContent = ''
+                }
+                if (response.response == 'server_off') {
+                    document.getElementById('serverOnline').setAttribute('style', 'display: none;');
+                    document.getElementById('serverOffline').removeAttribute('style');
+                    document.querySelectorAll('.actionBtn').forEach(el => {
+                        el.setAttribute('disabled', true)
+                    })
+                    if (response.hasOwnProperty('message')) {
+                        document.getElementById('msg').innerHTML = `
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <b>Server Error!</b> ${response.message}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>`
+                    }
+                }
+            })
+        }
+    })
 }
 
-// setUpStorage()
-// checkFunc()
-// let check = setInterval(checkFunc, 3000);
+ping()
+let check = setInterval(ping, 3000);

@@ -1,7 +1,7 @@
 chrome.runtime.onInstalled.addListener((details) => {
     chrome.storage.local.set({
         "_gen_extension": {
-            "status": "",
+            "status": "ping",
             "leaves": [],
             "tabs": []
         }
@@ -141,13 +141,40 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action == 'stop_scan') {
         chrome.storage.local.get('_gen_extension').then(items => {
             items._gen_extension = {
-                "status": "",
+                "status": "ping",
                 "leaves": [],
                 "tabs": []
             }
             chrome.storage.local.set(items)
         })
     }
+
+    if (message.action == 'ping') {
+        chrome.storage.local.get('_gen_extension').then(items => {
+            if (items._gen_extension.status == 'ping') {
+                fetch(message.server_url)
+                    .then(response => {
+                        if (response.status == 200) {
+                            if (items._gen_extension.server_url == '') {
+                                items._gen_extension.server_url = message.server_url
+                                chrome.storage.local.set(items)
+                            }
+                        }
+                        sendResponse({
+                            'response': (response.status == 200) ? 'server_on' : 'server_off'
+                        })
+                    })
+                    .catch(error => {
+                        sendResponse({
+                            'response': 'server_off',
+                            'message': error.message
+                        })
+                    })
+            }
+        })
+    }
+
+    return true
 })
 
 function contentScript(tabId) {
