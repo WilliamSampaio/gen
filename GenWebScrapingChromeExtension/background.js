@@ -17,6 +17,7 @@ chrome.runtime.onInstalled.addListener((details) => {
 // On Message
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
+    // Scan leaves
     if (message.action == 'scan_leaves') {
         fetch(message.server_url + '/leaves')
             .then(response => {
@@ -30,31 +31,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     items._gen_extension.leaves.push(...json)
                     items._gen_extension.status = 'scanning'
                     items._gen_extension.server_url = message.server_url
-
-                    for (let i = 0; i < items._gen_extension.tabs_amount; i++) {
-                        chrome.tabs.create({
-                            'active': false,
-                            'url': 'https://www.familysearch.org/pt/',
-                        }).then(tab => {
-                            items._gen_extension.tabs.push(tab.id)
-                        })
-                    }
-
-                    chrome.storage.local.set(items).then(() => {
-                        console.info('Extension', items)
-                        items._gen_extension.tabs.forEach(tabId => {
-                            chrome.tabs.update(tabId, {
-                                'url': `https://www.familysearch.org/tree/person/details/${items._gen_extension.leaves.pop()}`
-                            }).then(tab => {
-                                chrome.scripting.executeScript({
-                                    target: { tabId: tab.id },
-                                    function: contentScript,
-                                    args: [tab.id]
+                    if (items._gen_extension.leaves.length > 0) {
+                        let id = items._gen_extension.leaves.pop()
+                        chrome.storage.local.set(items).then(() => {
+                            for (let i = 0; i < items._gen_extension.tabs_amount; i++) {
+                                chrome.tabs.create({
+                                    'active': false,
+                                    'url': `https://www.familysearch.org/tree/person/details/${id}`,
+                                }).then(tab => {
+                                    chrome.scripting.executeScript({
+                                        target: { tabId: tab.id },
+                                        function: contentScript,
+                                        args: [tab.id]
+                                    })
+                                    items._gen_extension.tabs.push(tab.id)
+                                    chrome.storage.local.set(items).then(() => {
+                                        console.info('Extension', items)
+                                        sendResponse({ 'success': true })
+                                    })
                                 })
-                            })
+                            }
                         })
-                        sendResponse({ 'success': true })
-                    })
+                    } else {
+                        chrome.runtime.sendMessage({ 'action': 'stop_scan' })
+                    }
                 })
             })
             .catch(error => {
@@ -65,10 +65,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action == 'save') {
         chrome.storage.local.get('_gen_extension').then(async items => {
-
-            console.log('storage:', items)
-
             if (items._gen_extension.status == 'scanning') {
+                console.info('Message:', message)
                 fetch(items._gen_extension.server_url + '/node', {
                     method: 'POST',
                     headers: {
@@ -77,53 +75,30 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     body: JSON.stringify(message.data)
                 })
                     .then(response => {
-                        let index = items._gen_extension.leaves.indexOf(message.data[0].id)
-                        // let index_tab = items._gen_extension.tabs.indexOf(message.tab_id)
-
-                        // remve leave
-                        items._gen_extension.leaves.splice(index, 1)
-
                         if (items._gen_extension.leaves.length > 0) {
-
-                            // close tab
-                            chrome.tabs.remove(message.tab_id).then(() => {
-
-                                // remove tab id from storage
-                                // items._gen_extension.leaves.splice(index_tab, 1)
-
-                                // create new tab
+                            let id = items._gen_extension.leaves.pop()
+                            let indexTab = items._gen_extension.tabs.indexOf(message.tab_id)
+                            items._gen_extension.tabs.splice(indexTab, 1)
+                            chrome.tabs.remove(message.tab_id)
+                            chrome.storage.local.set(items).then(() => {
                                 chrome.tabs.create({
                                     'active': false,
-                                    'url': 'https://www.familysearch.org/pt/',
+                                    'url': `https://www.familysearch.org/tree/person/details/${id}`,
                                 }).then(tab => {
-
-                                    // store new tab id
+                                    chrome.scripting.executeScript({
+                                        target: { tabId: tab.id },
+                                        function: contentScript,
+                                        args: [tab.id]
+                                    })
                                     items._gen_extension.tabs.push(tab.id)
-
-                                    // save storage
                                     chrome.storage.local.set(items).then(() => {
-
-                                        // redirect
-                                        chrome.tabs.update(tab.id, {
-                                            'url': `https://www.familysearch.org/tree/person/details/${items._gen_extension.leaves.pop()}`
-                                        }).then(tab => {
-
-                                            // inject func
-                                            chrome.scripting.executeScript({
-                                                target: { tabId: tab.id },
-                                                function: contentScript,
-                                                args: [tab.id]
-                                            })
-                                        })
+                                        console.info('Remaining leaves:', items._gen_extension.leaves.length)
+                                        sendResponse({ 'success': true })
                                     })
                                 })
                             })
                         } else {
-                            items._gen_extension.status = ''
-                            chrome.tabs.remove(items._gen_extension.tabs).then(() => {
-                                items._gen_extension.tabs = []
-                                chrome.storage.local.set(items)
-                            })
+                            chrome.runtime.sendMessage({ 'action': 'stop_scan' })
                         }
                     })
                     .catch(error => {
@@ -135,6 +110,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action == 'stop_scan') {
         chrome.storage.local.get('_gen_extension').then(items => {
+            try {
+                chrome.tabs.remove(items._gen_extension.tabs)
+            } catch (err) {
+                console.log('Error when trying remove tabs: ', err.message)
+            }
             items._gen_extension.status = 'ping'
             items._gen_extension.leaves = []
             items._gen_extension.tabs = []
@@ -186,6 +166,8 @@ function contentScript(tabId) {
     }
 
     function scan(scanningLeaves) {
+        const XP_UNKNOW = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div/div/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[3]/button';
+
         const XP_ID = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button';
         const XP_GENDER = [
             '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span',
@@ -225,6 +207,13 @@ function contentScript(tabId) {
 
         const nodes = [];
         const rootNode = {};
+
+        if (getXPathNode(XP_UNKNOW)) {
+            rootNode.id = getXPathNode(XP_UNKNOW).textContent;
+            rootNode.ignore = true;
+            nodes.push(rootNode)
+            return chrome.runtime.sendMessage({ 'action': 'save', 'data': nodes, 'tab_id': tabId })
+        }
 
         XP_GENDER.forEach(xp => {
 
@@ -423,7 +412,7 @@ function contentScript(tabId) {
     window.addEventListener('load', function () {
         chrome.storage.local.get('_gen_extension').then(async items => {
             if (items._gen_extension.status == 'scanning') {
-                await sleep(6000).then(() => {
+                await sleep(5000).then(() => {
                     scan(true)
                 })
             }
