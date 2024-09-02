@@ -92,34 +92,33 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 body: JSON.stringify(message.data)
             })
                 .then(response => {
-                    chrome.tabs.remove(message.tab_id).then(() => {
-                        if (items._gen_extension.status == 'scanning') {
-                            let indexTab = items._gen_extension.tabs.indexOf(message.tab_id)
-                            items._gen_extension.tabs.splice(indexTab, 1)
-                            if (items._gen_extension.leaves.length > 0) {
-                                let id = items._gen_extension.leaves.pop()
-                                chrome.storage.local.set(items).then(() => {
-                                    chrome.tabs.create({
-                                        'active': false,
-                                        'url': `https://www.familysearch.org/tree/person/details/${id}`,
-                                    }).then(tab => {
-                                        chrome.scripting.executeScript({
-                                            target: { tabId: tab.id },
-                                            function: contentScript,
-                                            args: [tab.id, true]
-                                        })
-                                        items._gen_extension.tabs.push(tab.id)
-                                        chrome.storage.local.set(items).then(() => {
-                                            console.info('Remaining leaves:', items._gen_extension.leaves.length)
-                                            // sendResponse({ 'success': true })
-                                        })
+                    chrome.tabs.remove(message.tab_id)
+                    if (items._gen_extension.status == 'scanning') {
+                        let indexTab = items._gen_extension.tabs.indexOf(message.tab_id)
+                        items._gen_extension.tabs.splice(indexTab, 1)
+                        if (items._gen_extension.leaves.length > 0) {
+                            let id = items._gen_extension.leaves.pop()
+                            chrome.storage.local.set(items).then(() => {
+                                chrome.tabs.create({
+                                    'active': false,
+                                    'url': `https://www.familysearch.org/tree/person/details/${id}`,
+                                }).then(tab => {
+                                    chrome.scripting.executeScript({
+                                        target: { tabId: tab.id },
+                                        function: contentScript,
+                                        args: [tab.id, true]
+                                    })
+                                    items._gen_extension.tabs.push(tab.id)
+                                    chrome.storage.local.set(items).then(() => {
+                                        console.info('Remaining leaves:', items._gen_extension.leaves.length)
+                                        // sendResponse({ 'success': true })
                                     })
                                 })
-                            } else {
-                                chrome.runtime.sendMessage({ 'action': 'stop_scan' })
-                            }
+                            })
+                        } else {
+                            chrome.runtime.sendMessage({ 'action': 'stop_scan' })
                         }
-                    })
+                    }
                 })
                 .catch(error => {
                     console.error('Save failed:', error.message)
