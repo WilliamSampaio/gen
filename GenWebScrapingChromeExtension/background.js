@@ -17,6 +17,25 @@ chrome.runtime.onInstalled.addListener((details) => {
 // On Message
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
+    // Scan ID
+    if (message.action == 'scan') {
+        chrome.storage.local.get('_gen_extension').then(items => {
+            items._gen_extension.server_url = message.server_url
+            chrome.storage.local.set(items).then(() => {
+                chrome.tabs.create({
+                    'active': false,
+                    'url': `https://www.familysearch.org/tree/person/details/${message.id}`,
+                }).then(tab => {
+                    chrome.scripting.executeScript({
+                        target: { tabId: tab.id },
+                        function: contentScript,
+                        args: [tab.id, false]
+                    })
+                })
+            })
+        })
+    }
+
     // Scan leaves
     if (message.action == 'scan_leaves') {
         fetch(message.server_url + '/leaves')
@@ -42,7 +61,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                     chrome.scripting.executeScript({
                                         target: { tabId: tab.id },
                                         function: contentScript,
-                                        args: [tab.id]
+                                        args: [tab.id, true]
                                     })
                                     items._gen_extension.tabs.push(tab.id)
                                     chrome.storage.local.set(items).then(() => {
@@ -65,21 +84,21 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
     if (message.action == 'save') {
         chrome.storage.local.get('_gen_extension').then(async items => {
-            if (items._gen_extension.status == 'scanning') {
-                console.info('Message:', message)
-                fetch(items._gen_extension.server_url + '/node', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(message.data)
-                })
-                    .then(response => {
+            console.info('Message:', message)
+            fetch(items._gen_extension.server_url + '/node', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(message.data)
+            })
+                .then(async response => {
+                    await chrome.tabs.remove(message.tab_id)
+                    if (items._gen_extension.status == 'scanning') {
+                        let indexTab = items._gen_extension.tabs.indexOf(message.tab_id)
+                        items._gen_extension.tabs.splice(indexTab, 1)
                         if (items._gen_extension.leaves.length > 0) {
                             let id = items._gen_extension.leaves.pop()
-                            let indexTab = items._gen_extension.tabs.indexOf(message.tab_id)
-                            items._gen_extension.tabs.splice(indexTab, 1)
-                            chrome.tabs.remove(message.tab_id)
                             chrome.storage.local.set(items).then(() => {
                                 chrome.tabs.create({
                                     'active': false,
@@ -88,23 +107,23 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                     chrome.scripting.executeScript({
                                         target: { tabId: tab.id },
                                         function: contentScript,
-                                        args: [tab.id]
+                                        args: [tab.id, true]
                                     })
                                     items._gen_extension.tabs.push(tab.id)
                                     chrome.storage.local.set(items).then(() => {
                                         console.info('Remaining leaves:', items._gen_extension.leaves.length)
-                                        sendResponse({ 'success': true })
+                                        // sendResponse({ 'success': true })
                                     })
                                 })
                             })
                         } else {
                             chrome.runtime.sendMessage({ 'action': 'stop_scan' })
                         }
-                    })
-                    .catch(error => {
-                        console.error('Save failed:', error.message)
-                    });
-            }
+                    }
+                })
+                .catch(error => {
+                    console.error('Save failed:', error.message)
+                });
         })
     }
 
@@ -118,9 +137,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             items._gen_extension.status = 'ping'
             items._gen_extension.leaves = []
             items._gen_extension.tabs = []
-            chrome.storage.local.set(items).then(() => {
-                sendResponse({ 'success': true })
-            })
+            chrome.storage.local.set(items)
         })
     }
 
@@ -159,13 +176,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true
 })
 
-function contentScript(tabId) {
+function contentScript(tabId, scanningLeaves) {
 
     function sleep(time) {
         return new Promise(resolve => setTimeout(resolve, time));
     }
 
-    function scan(scanningLeaves) {
+    function scan(scanningLeaves = false) {
         const XP_UNKNOW = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div/div/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[3]/button';
 
         const XP_ID = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button';
@@ -411,11 +428,9 @@ function contentScript(tabId) {
 
     window.addEventListener('load', function () {
         chrome.storage.local.get('_gen_extension').then(async items => {
-            if (items._gen_extension.status == 'scanning') {
-                await sleep(6000).then(() => {
-                    scan(true)
-                })
-            }
+            await sleep(6000).then(() => {
+                scan(scanningLeaves)
+            })
         })
     })
 }

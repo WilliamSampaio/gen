@@ -22,14 +22,16 @@ chrome.storage.local.get('_gen_extension').then(items => {
 })
 
 btnRunScan.addEventListener('click', async function () {
-    const [tab] = await chrome.tabs.query({
-        active: true, currentWindow: true
-    });
-    chrome.scripting.executeScript({
-        target: { tabId: tab.id },
-        function: scan,
-        args: [serverApiUrl.value]
-    });
+    let id = prompt("FamilySearch ID:");
+    if (id == null || id == "") {
+        alert('ID is required')
+    } else {
+        chrome.runtime.sendMessage({
+            'action': 'scan',
+            'server_url': serverApiUrl.value,
+            'id': id
+        })
+    }
 });
 
 btnScanLeaves.addEventListener('click', () => {
