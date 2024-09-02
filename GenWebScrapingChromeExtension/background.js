@@ -412,7 +412,7 @@ function contentScript(tabId) {
     window.addEventListener('load', function () {
         chrome.storage.local.get('_gen_extension').then(async items => {
             if (items._gen_extension.status == 'scanning') {
-                await sleep(5000).then(() => {
+                await sleep(6000).then(() => {
                     scan(true)
                 })
             }
