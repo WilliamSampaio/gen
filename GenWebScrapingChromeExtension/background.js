@@ -23,7 +23,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             items._gen_extension.server_url = message.server_url
             chrome.storage.local.set(items).then(() => {
                 chrome.tabs.create({
-                    'active': false,
                     'url': `https://www.familysearch.org/tree/person/details/${message.id}`,
                 }).then(tab => {
                     chrome.scripting.executeScript({
