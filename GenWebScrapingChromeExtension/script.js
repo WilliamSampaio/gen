@@ -9,6 +9,7 @@ chrome.storage.local.get('_gen_extension').then(items => {
 
     if (items._gen_extension.status == 'scanning') {
         btnScanLeaves.setAttribute('style', 'display: none;')
+        btnStopScan.innerHTML = `Stop Scan (<b>Remaining: ${items._gen_extension.leaves.length}</b>)`
         btnStopScan.removeAttribute('style')
         serverApiUrl.setAttribute('disabled', 'true')
         tabsAmount.setAttribute('disabled', 'true')
