@@ -125,7 +125,7 @@ def get_leaves():
         t.leaf is false and
         t.id not in (select fo.father_id from father_of fo) and
         t.id not in (select mo.mother_id from mother_of mo)
-    order by t.inserted_in desc
+    order by t.inserted_in asc
     """
     session = Session()
     result = [x[0] for x in session.execute(text(sql)).all()]
