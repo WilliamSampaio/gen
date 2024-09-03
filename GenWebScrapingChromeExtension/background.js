@@ -24,12 +24,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             chrome.storage.local.set(items).then(() => {
                 chrome.tabs.create({
                     'url': `https://www.familysearch.org/tree/person/details/${message.id}`,
-                }).then(tab => {
-                    chrome.scripting.executeScript({
-                        target: { tabId: tab.id },
-                        function: contentScript,
-                        args: [tab.id, false]
-                    })
                 })
             })
         })
@@ -57,11 +51,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                     'active': false,
                                     'url': `https://www.familysearch.org/tree/person/details/${id}`,
                                 }).then(tab => {
-                                    chrome.scripting.executeScript({
-                                        target: { tabId: tab.id },
-                                        function: contentScript,
-                                        args: [tab.id, true]
-                                    })
                                     items._gen_extension.tabs.push(tab.id)
                                     chrome.storage.local.set(items).then(() => {
                                         console.info('Extension', items)
@@ -103,11 +92,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                     'active': false,
                                     'url': `https://www.familysearch.org/tree/person/details/${id}`,
                                 }).then(tab => {
-                                    chrome.scripting.executeScript({
-                                        target: { tabId: tab.id },
-                                        function: contentScript,
-                                        args: [tab.id, true]
-                                    })
                                     items._gen_extension.tabs.push(tab.id)
                                     chrome.storage.local.set(items).then(() => {
                                         console.info('Remaining leaves:', items._gen_extension.leaves.length)
@@ -171,7 +155,20 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true
 })
 
-function contentScript(tabId, scanningLeaves) {
+chrome.webNavigation.onCompleted.addListener((details) => {
+    if (details.url.includes('https://www.familysearch.org/tree/person/details/')) {
+        console.info('Details:', details)
+        chrome.storage.local.get('_gen_extension').then(items => {
+            chrome.scripting.executeScript({
+                target: { tabId: details.tabId },
+                function: contentScript,
+                args: [details.tabId, items._gen_extension.status == 'scanning' ? true : false]
+            })
+        })
+    }
+})
+
+async function contentScript(tabId, scanningLeaves) {
 
     function sleep(time) {
         return new Promise(resolve => setTimeout(resolve, time));
@@ -421,11 +418,7 @@ function contentScript(tabId, scanningLeaves) {
         chrome.runtime.sendMessage({ 'action': 'save', 'data': nodes, 'tab_id': tabId })
     }
 
-    window.addEventListener('load', function () {
-        chrome.storage.local.get('_gen_extension').then(async items => {
-            await sleep(6000).then(() => {
-                scan(scanningLeaves)
-            })
-        })
+    await sleep(5000).then(() => {
+        scan(scanningLeaves)
     })
 }
