@@ -44,12 +44,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                     items._gen_extension.status = 'scanning'
                     items._gen_extension.server_url = message.server_url
                     if (items._gen_extension.leaves.length > 0) {
-                        let id = items._gen_extension.leaves.pop()
-                        chrome.storage.local.set(items).then(() => {
+                        chrome.storage.local.set(items).then(async () => {
                             for (let i = 0; i < items._gen_extension.tabs_amount; i++) {
-                                chrome.tabs.create({
+                                await chrome.tabs.create({
                                     'active': false,
-                                    'url': `https://www.familysearch.org/tree/person/details/${id}`,
+                                    'url': `https://www.familysearch.org/tree/person/details/${items._gen_extension.leaves.pop()}`,
                                 }).then(tab => {
                                     items._gen_extension.tabs.push(tab.id)
                                     chrome.storage.local.set(items).then(() => {
@@ -177,7 +176,10 @@ async function contentScript(tabId, scanningLeaves) {
     function scan(scanningLeaves = false) {
         const XP_UNKNOW = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div/div/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[3]/button';
 
-        const XP_ID = '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button';
+        const XP_ID = [
+            '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div[2]/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button',
+            '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/h1/div/div/div/div/div/div[1]/div[2]/div/div/div[2]/div/span[2]/div/div[4]/button'
+        ];
         const XP_GENDER = [
             '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[3]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span',
             '/html/body/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div/div[6]/div/div/div/div[2]/div[1]/div/div[1]/div/div/div/div/div/div/div/div[3]/div[2]/div/div/div/h3/button/div/div/div/div/div/div/div[1]/span'
@@ -235,11 +237,16 @@ async function contentScript(tabId, scanningLeaves) {
             rootNode.gender = gender.textContent[0];
         })
 
-        let id = getXPathNode(XP_ID);
+        XP_ID.forEach(xp => {
 
-        if (id !== null) {
+            let id = getXPathNode(xp);
+
+            if (id === null) {
+                return;
+            }
+
             rootNode.id = id.textContent;
-        }
+        })
 
         let name = getXPathNode(XP_NAME);
 
@@ -418,7 +425,7 @@ async function contentScript(tabId, scanningLeaves) {
         chrome.runtime.sendMessage({ 'action': 'save', 'data': nodes, 'tab_id': tabId })
     }
 
-    await sleep(5000).then(() => {
+    await sleep(10000).then(() => {
         scan(scanningLeaves)
     })
 }

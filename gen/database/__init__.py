@@ -105,14 +105,15 @@ def add_maternal_filiation(mother_id: str, son_id: str):
 
 def get_roots():
     sql = """
-    select distinct t.id from tree t
+    select distinct * from tree t
     where
         t.id in (select rn.tree_id from root_nodes rn) or
         t.id not in (select fo.son_id from father_of fo) and
         t.id not in (select mo.son_id from mother_of mo)
+    order by t.name asc
     """
     session = Session()
-    result = [x[0] for x in session.execute(text(sql)).all()]
+    result = [x for x in session.execute(text(sql)).all()]
     session.close()
     return result
 
@@ -125,7 +126,7 @@ def get_leaves():
         t.leaf is false and
         t.id not in (select fo.father_id from father_of fo) and
         t.id not in (select mo.mother_id from mother_of mo)
-    order by t.id asc
+    order by t.inserted_in asc
     """
     session = Session()
     result = [x[0] for x in session.execute(text(sql)).all()]

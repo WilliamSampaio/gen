@@ -34,7 +34,7 @@ def add_nodes():
             tree_node = TreeNode()
             tree_node.id = node['id']
             tree_node.name = node['name']
-            tree_node.gender = node['gender']
+            tree_node.gender = node['gender'] if 'gender' in node else ''
             years = treats_years(node['years'])
             if years[0] is not None:
                 tree_node.born_in = date(year=years[0], month=1, day=1)
