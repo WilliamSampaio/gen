@@ -426,6 +426,7 @@ async function contentScript(tabId, scanningLeaves) {
     }
 
     await sleep(10000).then(() => {
+        window.scrollTo(0, document.body.scrollHeight)
         scan(scanningLeaves)
     })
 }
