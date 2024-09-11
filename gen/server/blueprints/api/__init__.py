@@ -1,6 +1,10 @@
+import base64
 from datetime import date
+from io import BytesIO
 
+import pytesseract
 from flask import Blueprint, request
+from PIL import Image
 
 from gen import database as db
 from gen.database import (
@@ -70,6 +74,17 @@ def get_roots():
 def get_leaves():
     data = db.get_leaves()
     return data, 200
+
+
+@api.route('/image', methods=['POST'])
+def scan_doc():
+    data = request.get_json()
+    image = Image.open(
+        BytesIO(base64.b64decode(data['base64']))
+    )
+    # image.save('teste.jpg')
+    text = pytesseract.image_to_string(image)
+    print(text)
 
 
 def init_app(app):

@@ -1,0 +1,27 @@
+link 0: (200)
+
+https://www.familysearch.org/search/catalog/3736298?availability=Family%20History%20Library
+
+link 1: (304)
+
+https://www.familysearch.org/search/film/107061034?cat=3736298
+https://www.familysearch.org/search/film/107105788?cat=3736298&i=0
+
+xpath (Visualizar apenas uma imagem): /html/body/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div[2]/div/div/div[1]/div[2]/div/button[1]
+
+xpath (Total): /html/body/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div[2]/div/div/div[1]/div[1]/div/div/div/div[3]/p
+
+xpath (Próxima Imagem): /html/body/div[2]/div/div/div/div/div/div/div[2]/div/div[1]/div/div/div/main/div/div/div/div/div[2]/div/div/div[3]/div/span[2]/button => where aria-disabled="false"
+
+link 2: (200)
+
+https://www.familysearch.org/ark:/61903/3:1:3QHV-L3FL-9438?cat=3736298&i=0
+https://www.familysearch.org/ark:/61903/3:1:3QHV-P3FL-9WBC?cat=3736298&i=658&cc=2137269
+https://www.familysearch.org/ark:/61903/3:1:3QHV-L3FQ-89FV-Z?cat=3736298&i=0
+https://www.familysearch.org/ark:/61903/3:1:3QHV-L3FQ-89NR-8?cat=3736298&i=1
+https://www.familysearch.org/ark:/61903/3:1:3QHV-L3FQ-89FM-6?cat=3736298&i=2
+
+link 3: (200)
+
+https://sg30p0.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/3:1:3QHV-L3FL-9438/$dist
+https://sg30p0.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/3:1:3QHV-L3FQ-89FM-6/$dist
