@@ -5,6 +5,7 @@ from io import BytesIO
 import pytesseract
 from flask import Blueprint, request
 from PIL import Image
+from unidecode import unidecode
 
 from gen import database as db
 from gen.database import (
@@ -77,14 +78,21 @@ def get_leaves():
 
 
 @api.route('/image', methods=['POST'])
-def scan_doc():
+def image():
     data = request.get_json()
-    image = Image.open(
-        BytesIO(base64.b64decode(data['base64']))
-    )
-    # image.save('teste.jpg')
-    text = pytesseract.image_to_string(image)
-    print(text)
+    if 'base64' not in data:
+        return {}, 400
+    if 'words' not in data:
+        return {}, 400
+    image = Image.open(BytesIO(base64.b64decode(data['base64'])))
+    text = pytesseract.image_to_string(image, 'por')
+    text = str(unidecode(text)).lower()
+    contem = 0
+    for word in data['words']:
+        if str(unidecode(word)).lower().strip() in text:
+            contem = contem + 1
+    score = contem / len(data['words'])
+    return {'score': score}, 200
 
 
 def init_app(app):
