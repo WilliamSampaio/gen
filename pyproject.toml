@@ -27,11 +27,7 @@ build-backend = "poetry.core.masonry.api"
 requires = ["poetry-core"]
 
 [tool.pytest_env]
-GEN_LOGIN_URL = "https://ident.familysearch.org/identity/login/"
-GEN_PASSWORD = "pass"
-GEN_PERSON_URL = "https://www.familysearch.org/tree/person/details/"
-GEN_SQLALCHEMY_DATABASE_URI = "sqlite:///database.test.sqlite3"
-GEN_USERNAME = "user"
+SQLALCHEMY_DATABASE_URI = "sqlite:///database.test.sqlite3"
 
 [tool.taskipy.tasks]
 db_migrate = "alembic upgrade head"

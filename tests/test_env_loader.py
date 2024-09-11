@@ -8,11 +8,7 @@ from gen.env_loader import env_is_defined, env_setter, load
 
 def test_load():
     env_indexes = [
-        'GEN_LOGIN_URL',
-        'GEN_PERSON_URL',
-        'GEN_USERNAME',
-        'GEN_PASSWORD',
-        'GEN_SQLALCHEMY_DATABASE_URI',
+        'SQLALCHEMY_DATABASE_URI',
     ]
 
     load('.env.test')
@@ -30,7 +26,7 @@ def test_env_is_defined():
     load('.env.test')
 
     assert env_is_defined('XYZ_' + secrets.token_hex(nbytes=8)) is False
-    assert env_is_defined('GEN_SQLALCHEMY_DATABASE_URI') is True
+    assert env_is_defined('SQLALCHEMY_DATABASE_URI') is True
 
 
 def test_env_setter():

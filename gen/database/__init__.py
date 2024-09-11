@@ -5,7 +5,7 @@ from sqlalchemy.orm import sessionmaker
 
 from gen.database.entities import FatherOf, MotherOf, Root, TreeNode
 
-engine = create_engine(environ['GEN_SQLALCHEMY_DATABASE_URI'], echo=False)
+engine = create_engine(environ['SQLALCHEMY_DATABASE_URI'], echo=False)
 
 Session = sessionmaker(engine)
 

@@ -56,8 +56,8 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
-    if 'GEN_SQLALCHEMY_DATABASE_URI' in os.environ:
-        connectable = create_engine(os.environ['GEN_SQLALCHEMY_DATABASE_URI'])
+    if 'SQLALCHEMY_DATABASE_URI' in os.environ:
+        connectable = create_engine(os.environ['SQLALCHEMY_DATABASE_URI'])
     else:
         connectable = engine_from_config(
             config.get_section(config.config_ini_section, {}),
