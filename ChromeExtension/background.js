@@ -145,8 +145,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.action == 'scan_image') {
-        chrome.storage.local.get('_gen_extension').then(async items => {
-            console.info('Server URL', items._gen_extension.server_url + '/image')
+        chrome.storage.local.get('_gen_extension').then(items => {
             fetch(items._gen_extension.server_url + '/image', {
                 method: 'POST',
                 headers: {
