@@ -3,9 +3,24 @@ const btnScanLeaves = document.getElementById('btnScanLeaves')
 const btnStopScan = document.getElementById('btnStopScan')
 const serverApiUrl = document.getElementById('serverApiUrl')
 const tabsAmount = document.getElementById('tabsAmount')
+const folderUrl = document.getElementById('folderUrl')
+const wordsList = document.getElementById('wordsList')
+const btnScanFolder = document.getElementById('btnScanFolder')
 
 chrome.storage.local.get('_gen_extension').then(items => {
     tabsAmount.value = items._gen_extension.tabs_amount
+
+    folderUrl.value = items._gen_extension.folder_url
+    wordsList.value = items._gen_extension.words.join(',')
+
+    document.getElementById('matchesTbody').innerText = ''
+
+    items._gen_extension.matches.sort((a, b) => b.score - a.score).forEach(item => {
+        document.getElementById('matchesTbody').innerHTML += `<tr>
+            <td>${item.score}</td>
+            <td><a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a></td>
+        </tr>`
+    })
 
     if (items._gen_extension.status == 'scanning') {
         btnScanLeaves.setAttribute('style', 'display: none;')
@@ -57,6 +72,32 @@ btnStopScan.addEventListener('click', () => {
             btnScanLeaves.removeAttribute('style')
             serverApiUrl.removeAttribute('disabled')
             tabsAmount.removeAttribute('disabled')
+        }
+    })
+})
+
+folderUrl.addEventListener('change', () => {
+    chrome.storage.local.get('_gen_extension').then(items => {
+        items._gen_extension.folder_url = folderUrl.value
+        chrome.storage.local.set(items)
+    })
+})
+
+wordsList.addEventListener('change', () => {
+    chrome.storage.local.get('_gen_extension').then(items => {
+        items._gen_extension.words = wordsList.value.split(',')
+        chrome.storage.local.set(items)
+    })
+})
+
+btnScanFolder.addEventListener('click', () => {
+    chrome.runtime.sendMessage({
+        'action': 'scan_folder',
+        'server_url': serverApiUrl.value
+    }).then(response => {
+        if (response.success) {
+            folderUrl.setAttribute('disabled', true)
+            wordsList.setAttribute('disabled', true)
         }
     })
 })

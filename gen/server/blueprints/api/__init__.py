@@ -92,7 +92,7 @@ def image():
         if str(unidecode(word)).lower().strip() in text:
             contem = contem + 1
     score = contem / len(data['words'])
-    return {'score': score}, 200
+    return {'score': float('{:.2f}'.format(score))}, 200
 
 
 def init_app(app):
