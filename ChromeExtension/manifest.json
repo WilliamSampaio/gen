@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
-    "name": "WebScrapingChromeExtension",
-    "description": "Web scraping Chrome extension",
+    "name": "Gen Chrome Extension",
+    "description": "FamilySearch Scraping Chrome Extension",
     "version": "0.1.0",
     "homepage_url": "https://github.com/WilliamSampaio/gen",
     "action": {
