@@ -6,6 +6,8 @@ const tabsAmount = document.getElementById('tabsAmount')
 const folderUrl = document.getElementById('folderUrl')
 const wordsList = document.getElementById('wordsList')
 const btnScanFolder = document.getElementById('btnScanFolder')
+const btnStopScanFolder = document.getElementById('btnStopScanFolder')
+const btnDownloadMatches = document.getElementById('btnDownloadMatches')
 
 chrome.storage.local.get('_gen_extension').then(items => {
     tabsAmount.value = items._gen_extension.tabs_amount
@@ -102,6 +104,32 @@ btnScanFolder.addEventListener('click', () => {
     })
 })
 
+btnStopScanFolder.addEventListener('click', () => {
+    chrome.runtime.sendMessage({
+        'action': 'stop_scan_image'
+    }).then(response => {
+        // if (response.success) {}
+    })
+})
+
+btnDownloadMatches.addEventListener('click', () => {
+    chrome.storage.local.get('_gen_extension').then(items => {
+        let catalogo = items._gen_extension.folder_url.split('?cat=')[1]
+        let pasta = items._gen_extension.folder_url.split('?cat=')[0].split('/').reverse()[0]
+        let html = `<html><a href='${items._gen_extension.folder_url}' target='_blank'>Catalogo: ${catalogo} Pasta: ${pasta}</a><br><ol>`
+        items._gen_extension.matches.forEach(match => {
+            html += `<li>(${items._gen_extension.words.join(',')}) | SCORE: ${match.score}% | <a href='${match.url}' target='_blank'>${match.url}</a></li>`
+        })
+        html += '</ol></html>'
+        const blob = new Blob([html], { type: "text/html" })
+        const url = URL.createObjectURL(blob);
+        chrome.downloads.download({
+            url: url,
+            filename: `${catalogo}_${pasta}.html`
+        })
+    })
+})
+
 tabsAmount.addEventListener('change', () => {
     chrome.runtime.sendMessage({
         'action': 'change_tabs_amount',
@@ -146,66 +174,3 @@ const ping = () => {
 
 ping()
 let check = setInterval(ping, 3000);
-
-
-// btnScanLeaves.addEventListener('click', async function () {
-
-//     if (!window.confirm(`Press OK to continue...`)) {
-//         return;
-//     }
-
-//     fetch(document.getElementById('serverApiUrl').value + '/leaves')
-//         .then(response => {
-//             if (response.status != 200) {
-//                 throw new Error(`Something went wrong (Status: ${response.status})`);
-//             }
-//             return response.json();
-//         })
-
-//         .then(json => {
-//             if (chrome.storage) {
-//                 chrome.storage.local.get('__gen_extension', function (items) {
-//                     if (Object.keys(items).length === 0) {
-//                         throw new Error('Storage not seted!')
-//                     }
-//                     items.__gen_extension.leaves = [];
-//                     items.__gen_extension.leaves.push(...json);
-//                     chrome.storage.local.set(items)
-//                         .then(() => {
-//                             console.log('Items stored!');
-//                         })
-//                         .catch(error => {
-//                             throw new error;
-//                         })
-//                 });
-//             } else {
-//                 alert("chrome.storage API is not available.");
-//             }
-//         })
-//         .catch(error => {
-//             alert('Error: ' + error.message)
-//         })
-
-//     chrome.storage.local.get('__gen_extension', async function (items) {
-//         while (items.__gen_extension.leaves.length > 0) {
-//             const [tab] = await chrome.tabs.query({
-//                 active: true, currentWindow: true
-//             });
-//             await chrome.scripting.executeScript({
-//                 target: { tabId: tab.id },
-//                 function: id => { window.location.href = 'https://www.familysearch.org/tree/person/details/' + id },
-//                 args: [items.__gen_extension.leaves.shift()]
-//             });
-//             console.log('Loading page...');
-//             await sleep(5000);
-//             await chrome.scripting.executeScript({
-//                 target: { tabId: tab.id },
-//                 function: scan,
-//                 args: [document.getElementById('serverApiUrl').value, true]
-//             });
-//             console.log('Length: ', items.__gen_extension.leaves.length);
-//         };
-//         chrome.storage.local.set(items);
-//         alert('Finish!');
-//     });
-// });

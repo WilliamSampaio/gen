@@ -9,11 +9,7 @@ chrome.runtime.onInstalled.addListener((details) => {
             "folder_url": "https://www.familysearch.org/search/film/107061034?cat=3736298",
             "folder_tab_id": null,
             "words": ["manaus", "Municipal", "teste!"],
-            "matches": [/*
-                {'score': 0.50, 'url': 'http//teste.com'},
-                {'score': 0.25, 'url': 'http//teste.com'},
-                {'score': 0.99, 'url': 'http//teste.com'}
-            */]
+            "matches": []
         }
     })
     console.log("Installed", details)
@@ -144,6 +140,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         })
     }
 
+    if (message.action == 'open_image') {
+        chrome.storage.local.get('_gen_extension').then(async items => {
+            await chrome.tabs.create({
+                'active': false,
+                'url': `https://sg30p0.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/${message.id}/$dist`,
+            })
+        })
+    }
+
     if (message.action == 'scan_image') {
         chrome.storage.local.get('_gen_extension').then(items => {
             fetch(items._gen_extension.server_url + '/image', {
@@ -158,6 +163,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             })
                 .then(response => {
                     if (response.status == 200) {
+                        chrome.tabs.remove(message.tab_id)
                         return response.json()
                     }
                 })
@@ -174,6 +180,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 .catch(error => {
                     console.error('Scan failed:', error.message)
                 });
+        })
+    }
+
+    if (message.action == 'stop_scan_image') {
+        chrome.storage.local.get('_gen_extension').then(items => {
+            chrome.tabs.remove(items._gen_extension.folder_tab_id)
+            items._gen_extension.status = 'ping'
+            items._gen_extension.folder_tab_id = null
+            chrome.storage.local.set(items).then(() => {
+                sendResponse({ 'success': true })
+            })
         })
     }
 
@@ -225,22 +242,27 @@ chrome.webNavigation.onCompleted.addListener((details) => {
     }
 
     if (details.url.includes('https://www.familysearch.org/search/film/')) {
-        console.info('1 Details:', details)
         chrome.storage.local.get('_gen_extension').then(items => {
-            chrome.scripting.executeScript({
-                target: { tabId: details.tabId },
-                function: contentScriptScanImage
-            })
+            if (items._gen_extension.status == 'scanning_images') {
+                console.info('1 Details:', details)
+                chrome.scripting.executeScript({
+                    target: { tabId: details.tabId },
+                    function: contentScriptScanImage
+                })
+            }
         })
     }
 
     if (details.url.includes('https://sg30p0.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/')) {
-        console.info('2 Details:', details)
         chrome.storage.local.get('_gen_extension').then(items => {
-            chrome.scripting.executeScript({
-                target: { tabId: details.tabId },
-                function: readImage
-            })
+            if (items._gen_extension.status == 'scanning_images') {
+                console.info('2 Details:', details)
+                chrome.scripting.executeScript({
+                    target: { tabId: details.tabId },
+                    function: readImage,
+                    args: [details.tabId]
+                })
+            }
         })
     }
 })
@@ -561,10 +583,12 @@ async function contentScriptScanImage() {
 
             while (btn.getAttribute('aria-disabled') == 'false') {
                 let id = window.location.href.substring(window.location.href.lastIndexOf('/') + 1).split('?')[0]
-                window.open(`https://sg30p0.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/${id}/$dist`, '_blank')
-                await sleep(2000).then(() => { })
+                chrome.runtime.sendMessage({ 'action': 'open_image', 'id': id })
+                await sleep(3000).then(() => { })
                 btn.click()
             }
+
+            chrome.runtime.sendMessage({ 'action': 'stop_scan_image' })
         })
     }
 
@@ -574,13 +598,13 @@ async function contentScriptScanImage() {
     })
 }
 
-async function readImage() {
+async function readImage(tabId) {
 
     function sleep(time) {
         return new Promise(resolve => setTimeout(resolve, time));
     }
 
-    await sleep(3000).then(async () => {
+    await sleep(2000).then(async () => {
         const image = document.querySelector('img');
 
         // Get the remote image as a Blob with the fetch API
@@ -595,13 +619,10 @@ async function readImage() {
                     id = id.replace(
                         'https://sg30p0.familysearch.org/service/records/storage/deepzoomcloud/dz/v1/', '')
                     id = id.replace('/$dist', '')
-                    let message = { 'action': 'scan_image', 'base64': base64, 'id': id }
-                    console.log(message)
+                    let message = { 'action': 'scan_image', 'base64': base64, 'id': id, 'tab_id': tabId }
                     chrome.runtime.sendMessage(message)
                 };
                 reader.readAsDataURL(blob);
             })
     })
-
-    await sleep(1000).then(async () => { window.close() })
 }
