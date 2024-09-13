@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="style.css">
     <script src="bootstrap.bundle.min.js"></script>
 </head>
@@ -67,13 +66,13 @@
             </div>
             <div class="mb-3">
                 <h6>Encontrados</h6>
+                <button id="btnDownloadMatches" class="btn btn-success">Download</button>
                 <div class="table-responsive">
                     <table class="table table-striped">
                         <thead style="white-space: nowrap;">
                             <tr>
                                 <th>Score (%)</th>
                                 <th>Link</th>
-                                <th><button id="btnDownloadMatches" class="btn btn-success">Download</button></th>
                             </tr>
                         </thead>
                         <tbody id="matchesTbody" style="white-space: nowrap;"></tbody>

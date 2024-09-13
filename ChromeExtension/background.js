@@ -8,7 +8,13 @@ chrome.runtime.onInstalled.addListener((details) => {
             "tabs_amount": 3,
             "folder_url": "https://www.familysearch.org/search/film/107061034?cat=3736298",
             "folder_tab_id": null,
-            "words": ["manaus", "Municipal", "teste!"],
+            "words": [
+                "motta", "mota", "francisco",
+                "ceara", "acre", "grangeiro",
+                "granjeiro", "sinforoso",
+                "sinfuroso", "sinfuroso",
+                "pires"
+            ],
             "matches": []
         }
     })
